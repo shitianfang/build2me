@@ -53,28 +53,41 @@ flip to Done by cascade — or just read
 [acceptance/example-flow.test.mjs](acceptance/example-flow.test.mjs), which
 does exactly that, verified in CI.
 
-## This repository is self-hosting
+## This repository is self-hosting — and closed its own root
 
-build2me is developed under its own protocol. The system is the `root`
-contract, decomposed into nine children; the verifier, frontier tool,
-immutability check, protocol document, and example flow are Done — their
-acceptance gates are this repo's CI — and the remaining children are **an
-honest, open frontier**:
+build2me was developed under its own protocol, by a swarm: the system is the
+`root` contract, decomposed into ten children, and **all eleven contracts are
+Done** — `node tools/verify.mjs` reports 11 done / 0 open, and the moment the
+last child closed, root's own integration gate ran by cascade and accepted.
 
-- `typed-stub-semantics` — compile-against-stub gates for typed languages
-- `deprecation-cascade` — tooling for deprecation with downstream re-open
-- `agent-server` — the optimistic-concurrency HTTP form of the protocol
-- `slow-loop-instruments` — co-change misalignment reports and cold-agent drills
+Two protocol events from that run are preserved because they are the protocol
+working as designed:
 
-`node tools/frontier.mjs` in this repo prints precisely that list. If you want
-to contribute, that command *is* the contribution guide: pick a leaf, read its
-contract, submit. The protocol you'd be following is the one you'd be building.
+- **Race 001** ([races/001-deprecation-cascade.md](races/001-deprecation-cascade.md)):
+  three isolated agents raced `deprecation-cascade` against a pre-published
+  gate. All passed; a blind pairwise rubric review found a real defect in two
+  of three (silent deprecation loss on whitespace names) and the one solution
+  that guarded it won. Losing attempts are preserved in full on the
+  [`attempts/deprecation-cascade`](https://github.com/shitianfang/build2me/tree/attempts/deprecation-cascade)
+  branch — failed work stays searchable.
+- **The self-reference lesson**: root's completion gate originally queried the
+  accurate frontier — which re-enters the completion gate itself. A completion
+  criterion must be structural (the verifier calling it already supplied the
+  accurate half). The gate was repaired, the cascade closed root, and the
+  lesson lives in `acceptance/root.test.mjs`'s header.
+
+The toolset that came out: `verify` (the kernel), `frontier` (the scheduler),
+`graph` (DAG export: json/mermaid/dot), `deprecate` (statement change with
+downstream re-open), `stub` (compile-against-stub for typed decomposition),
+`serve` (the HTTP coordination server), `misalign` + `drill` (the slow loop).
 
 ## Status
 
-v0.1 — git-native (branches carry attempts; CI is the verifier). The server
-form, typed stubs, deprecation tooling, and slow-loop instruments are open
-contracts, deliberately: this README's claims should never outrun `verify.mjs`.
+v0.1 complete and self-verified — git-native (branches carry attempts; CI is
+the verifier). Contributing now means *extending the statement set*: publish a
+new contract with a gate (run the gate red-for-the-right-reasons first), or
+deprecate-and-supersede one you can improve. This README's claims never outrun
+`verify.mjs`.
 
 ## License
 

@@ -29,6 +29,8 @@ node tools/frontier.mjs --dir acceptance/fixtures/demo
 
 [acceptance/example-flow.test.mjs](acceptance/example-flow.test.mjs) 在 CI 里完整演示：实现开放的 `mul` 契约后，父级 `calc` 经级联自动转为 Done。
 
-## 本仓库自举
+## 本仓库自举——并关闭了自己的根契约
 
-build2me 用它自己的协议开发自己：系统即 `root` 契约，分解为九个子契约；验证器、前沿工具、不可变检查、协议文档、示例流程已 Done（它们的验收就是本仓库 CI），其余四个是**真实的开放前沿**——`node tools/frontier.mjs` 打印的就是贡献指南本身。
+build2me 用它自己的协议、由一群并行 agent 开发完成：系统即 `root` 契约，分解为十个子契约，**全部十一份契约均已 Done**（`node tools/verify.mjs` 报告 11 done / 0 open）；最后一个子契约关闭的瞬间，root 的集成门经级联真实运行并通过。
+
+两个协议事件被完整保留，因为它们正是协议在按设计工作：**Race 001**（三个隔离 agent 竞速同一契约，盲评在两份实现中找到真实缺陷，唯一防住它的那份获胜合入，败者完整归档在 `attempts/deprecation-cascade` 分支）；**自引用教训**（root 的完成门最初查询精确前沿——而这会重入完成门自身；完成判据必须是结构性的，教训写在 `acceptance/root.test.mjs` 头部）。
