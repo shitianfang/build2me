@@ -16,17 +16,42 @@ node tools/init.mjs ../my-system --root my-system   # scaffold your own project
 
 ---
 
-## The problem
+## What this is for
 
-Put several agents on one codebase and you hit the two failures
-[Prove2Me](https://arxiv.org/abs/2608.28433) hit first in mathematics: agents
-co-editing shared files interfere until the work can no longer be partitioned,
-and git PR workflows stall on human review. Prove2Me solved it for proofs — a
-swarm of Claude agents [formalized Fermat's Last Theorem in Lean in 11
+An agent session with a full context window is already a good engineer. What it
+cannot do is **run long**: contexts fill, sessions die, and every restart loses
+the plan, the state of the work, and the reasons behind each decision. Past a
+certain mission size — days of wall-clock, several agents, nobody watching —
+the limiting factor stops being intelligence and becomes infrastructure: where
+does intent live when no session holds it? Whose word is "done" when no one
+reviews the work? How does the next agent know what to do without being told?
+
+build2me is that infrastructure — **foundational support for long-horizon
+autonomous agent operation**. Each mechanism is one of those questions answered
+as a file format or a derivation rule:
+
+| long-horizon failure | the protocol's answer |
+|---|---|
+| intent dies with the session | `contracts/` — the mission as immutable, machine-checkable statements that outlive every author |
+| "done" relies on self-report | the verifier — status derived at read time from gates; never stored, never claimed |
+| every new agent needs onboarding | the frontier — a cold agent reads what is open and actionable, and continues; no handoff document |
+| parallel agents interfere | immutability + optimistic concurrency — nothing is ever edited, so nothing is contended |
+| requirements change mid-mission | deprecation cascade — history is never rewritten; dependents re-open mechanically |
+| lessons evaporate between sessions | submissions and failed attempts stay searchable; laws freeze wins into enforced rules |
+
+**What it is not for:** a task that fits inside one session's context is
+cheaper done directly in that session. Contracts, gates and verification buy
+durability and trust, and they pay off only when the work outlives its workers.
+
+The precedent that this works at scale is
+[Prove2Me](https://arxiv.org/abs/2608.28433): agents co-editing shared files
+interfere, PR workflows stall on human review — so it moved trust from review
+to immutable statements plus a checker, and a swarm of Claude agents
+[formalized Fermat's Last Theorem in Lean in 11
 days](https://www.anthropic.com/research/formalizing-fermats-last-theorem),
-30,300 theorems, with no human reviewing proofs during the run (Kevin
-Buzzard reviewed the completed proof afterward). build2me transplants that
-protocol to software.
+30,300 theorems, with no human reviewing proofs during the run (Kevin Buzzard
+reviewed the completed proof afterward). build2me transplants that protocol to
+software.
 
 ## Three objects
 
@@ -233,6 +258,20 @@ means:
 - **Gates are as good as they are written.** Race 001 is the proof: three
   solutions passed the same gate and two carried a real defect. Admissibility is
   mechanical; quality still needs the selection layer or a human.
+- **Verdicts admit the contract, they do not attribute the work.** Gates run
+  per contract against the working tree, so when several submissions to one
+  contract are ready, directory order — not causality — decides which shows
+  ACCEPTED; a submission listing files it did not write can take the credit.
+  Binding verdicts to a submission's declared artifacts is open work.
+- **Gates are mutable where contracts are not.** CI protects `contracts/` and
+  the deprecation log; nothing yet protects `acceptance/`. A later commit can
+  weaken a gate without tripping any check — the planned fix is a CI rule that
+  a contract's gate must predate that contract's first submission.
+- **A Done root cannot coexist with an open backlog.** The root gate asserts
+  an empty frontier, so publishing any new open contract re-opens root and
+  turns main red until the newcomer closes. That is prove2me's mission
+  semantics (complete means nothing open), and it means new work lands either
+  as a contract that closes in the same round, or under a new root.
 - **Duplicate attempts cost real money.** First-accepted-wins means a contested
   contract may be paid for N times. Race 001 discarded two of three
   implementations — worth it there, because the discarded ones surfaced a defect

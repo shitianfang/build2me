@@ -96,8 +96,12 @@ write(path.join('contracts', `${rootName}.json`), `${JSON.stringify({
 write(path.join('acceptance', `${rootName}.test.mjs`), `// The completion criterion for the whole system. It runs only when every
 // child contract has been ACCEPTED in the same verification pass, so it must
 // use STRUCTURAL status: querying accurate status from inside a completion
-// gate re-enters this gate. Add real end-to-end assertions below the frontier
-// check as the system takes shape.
+// gate re-enters this gate.
+//
+// The frontier check alone is NOT a completion criterion: at the moment of
+// cascade it is true by construction and certifies nothing. The second test
+// below fails on purpose until you replace it with real end-to-end checks
+// of the finished system — root cannot close on a vacuous gate.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
@@ -112,6 +116,13 @@ test('the frontier is empty', () => {
   assert.equal(r.status, 0, r.stdout + r.stderr);
   const open = JSON.parse(r.stdout).open.map((c) => c.name);
   assert.deepEqual(open, [], \`still open: \${open.join(', ')}\`);
+});
+
+test('the composed system answers as one', () => {
+  // Replace this with end-to-end assertions against the FINISHED system:
+  // run its CLI, hit its API, load the composed module — whatever proves the
+  // parts work together. Until then this gate stays red, by design.
+  assert.fail('root gate not written yet: replace this assertion with an end-to-end check of the finished system');
 });
 `);
 
