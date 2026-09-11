@@ -13,9 +13,15 @@ jobs:
       - name: contract immutability
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            bash tools/check-immutability.sh "origin/${{ github.base_ref }}"
+            base="origin/${{ github.base_ref }}"
           else
-            bash tools/check-immutability.sh "HEAD~1"
+            # Every commit in the push must be checked, not only the tip: a push
+            # of N commits where an early one edits a contract slipped through
+            # when the baseline was HEAD~1. github.event.before is the branch
+            # tip before this push; it is all-zeros for a newly created branch.
+            base="${{ github.event.before }}"
+            case "$base" in ""|0000000000000000000000000000000000000000) base="HEAD~1" ;; esac
           fi
+          bash tools/check-immutability.sh "$base"
       - name: verify
         run: node tools/verify.mjs
