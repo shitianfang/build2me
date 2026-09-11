@@ -1,6 +1,6 @@
 # build2me（中文）
 
-**一句话：把「写软件」改造成「做数学证明」，好让几十个 agent 同时开工——不用互相协调，也不用人来审代码。**
+**一句话：在 build 软件之前，先绘制解空间的地图——好让几十个 agent 同时开工，不用互相协调，也不用人来审代码。**
 
 [协议全文](PROTOCOL.md)（英文） · [桩语义](STUBS.md) · [DAG 图](docs/DAG.md) · [Race 001](races/001-deprecation-cascade.md) · [English](README.md)
 
