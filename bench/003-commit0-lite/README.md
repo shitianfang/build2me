@@ -39,3 +39,4 @@ contamination caveats apply to every Commit0 entry, including this one.
 | tinydb | 201 / 201 | **100%** | 107.4k | 2026-09-11 |
 | cachetools | 215 / 215 | **100%** | 60.0k | 2026-09-11 |
 | voluptuous | 149 / 149 | **100%** | 145.6k | 2026-09-11 |
+| deprecated | 171 / 171 | **100%** | 61.8k | 2026-09-11 |
