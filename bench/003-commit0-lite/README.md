@@ -47,3 +47,4 @@ contamination caveats apply to every Commit0 entry, including this one.
 | simpy | 159 / 159 (10 benchmark-marked deselected by repo config) | **100%** | 113.5k | 2026-09-11 |
 | imapclient | 267 / 267 | **100%** | 205.7k | 2026-09-11 |
 | cookiecutter | 367 / 367 (4 Windows-only skips) | **100%** | 215.3k | 2026-09-11 |
+| chardet | 376 / 376 (6 xfail, 1 xpass per suite config) | **100%** | 173.4k | 2026-09-11 |
