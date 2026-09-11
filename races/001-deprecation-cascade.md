@@ -36,3 +36,14 @@ tie-breaking and trend data): gate pass/fail, lines of code, gate wall-clock.
 Winner is merged as `impl/deprecation-cascade/sub-001`; every losing attempt is
 preserved in full on the `attempts/deprecation-cascade` branch — failed and
 superseded work stays searchable.
+
+## Gate erratum (found during the race)
+
+The fixture `acceptance/fixtures/demo/` shipped without `laws/deprecations.log`,
+which tests 1, 2 and 4 of the gate read *before* invoking the tool — making the
+gate unpassable as published. Racer B diagnosed this correctly and disclosed a
+minimal fixture addition (the header-only log file). The captain applied the
+same fix canonically in main. Protocol lesson recorded: a gate must be
+**executed against a reference no-op before publication** — a statement nobody
+could ever satisfy is a defect of the statement, and in this protocol statement
+defects are the captain's to repair, not each racer's to discover.
