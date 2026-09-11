@@ -1,0 +1,7 @@
+{
+  "contract": "deprecation-cascade",
+  "kind": "implementation",
+  "imports": [],
+  "files": ["tools/deprecate.mjs"],
+  "notes": "Race 001 winner (blind label Y, 1st of 3 by pre-registered pairwise rubric review; see races/001-deprecation-cascade.md). Validate everything before touching the append-only log, then append exactly one '<name> <reason>' line and report the transitive set of contracts the verifier will now hold Open (reverse BFS over submission imports via loadProject, pruning already-deprecated contracts). Captain follow-up per judge recommendation: '#'-prefix guard and post-append read-back verification. Dead end for the next agent: the demo fixture originally shipped without laws/deprecations.log while the fixed gate reads it before invoking the tool — fixed canonically in main during the race."
+}

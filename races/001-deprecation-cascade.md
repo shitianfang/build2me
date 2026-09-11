@@ -47,3 +47,37 @@ same fix canonically in main. Protocol lesson recorded: a gate must be
 **executed against a reference no-op before publication** — a statement nobody
 could ever satisfy is a defect of the statement, and in this protocol statement
 defects are the captain's to repair, not each racer's to discover.
+
+## Results
+
+All three solutions passed the fixed gate, independently re-verified by the
+captain in clean environments. Objective metrics were a three-way tie:
+
+| blind label | gate | LOC | gate wall-clock |
+|---|---|---|---|
+| X | pass | 132 | 772 ms |
+| Y | pass | 127 | 795 ms |
+| Z | pass | 134 | 784 ms |
+
+**Blind ranking: 1st Y, 2nd X, 3rd Z.** What separated them was not style but
+trustworthiness of the report: the judge found a real defect (D1) in X and Z —
+a legal contract name containing whitespace makes both print success while
+writing a log line the engine reads back as a different name, silently voiding
+the deprecation and bypassing the deprecate-once invariant the gate itself
+tests. Y alone rejects the name before writing. The captain reproduced D1 on
+both implementations before accepting the verdict. Secondary findings: Z
+misreported `--reason=x` as an unknown option and asserted a corrupt-but-present
+contract file "does not exist"; X rejected a legal reason starting with `-`
+(accurately, with a working escape hatch). Full pairwise evidence per rubric
+item is preserved on the attempts branch.
+
+Y is merged as `impl/deprecation-cascade/sub-001`. Captain follow-up applied on
+top, per the judge's closing recommendation: a `#`-prefix guard and a
+post-append read-back verification (`loadProject().deprecated` must contain the
+name, else exit 2) — one check that closes every log-syntax trap at once.
+
+The judge's remaining observation stands as future work: the log format itself
+cannot represent names with whitespace or a leading `#`; a stricter contract
+name grammar at publish time would remove the trap category entirely.
+
+Label reveal (captain's record): X = racer B, Y = racer C, Z = racer A.
