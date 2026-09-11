@@ -36,4 +36,4 @@ contamination caveats apply to every Commit0 entry, including this one.
 
 | repo | official tests passed | rate | agent tokens | date |
 |---|---|---|---|---|
-| (campaign starts with tinydb) | | | | |
+| tinydb | 201 / 201 | **100%** | 107.4k | 2026-09-11 |
