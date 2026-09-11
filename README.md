@@ -1,7 +1,7 @@
 # build2me
 
-**Turn building software into doing mathematics — so a swarm of agents can work
-in parallel without coordinating, and without a human reviewing code.**
+**Map the solution space before you build the software — so a swarm of agents can
+work in parallel without coordinating, and without a human reviewing code.**
 
 Work is split into immutable contracts, each carrying the command that decides
 whether it is satisfied. Agents pick contracts off a ranked frontier without
