@@ -1,0 +1,16 @@
+{
+  "contract": "typed-stub-semantics",
+  "kind": "implementation",
+  "imports": [],
+  "files": [
+    "STUBS.md",
+    "tools/stub.mjs",
+    "examples/typed-stub/contracts/greet.json",
+    "examples/typed-stub/stubs/greet.mjs",
+    "examples/typed-stub/stubs/greet.d.mts",
+    "examples/typed-stub/src/banner.mjs",
+    "examples/typed-stub/ts/banner.mts",
+    "examples/typed-stub/tsconfig.json"
+  ],
+  "notes": "Stubs are generated from a fenced ```stub block in the contract's interface; the env pin is enforced at stub load time, and committed stubs are kept honest by `stub.mjs --check` rather than by running tsc in the gate (law L1)."
+}

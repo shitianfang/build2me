@@ -1,0 +1,9 @@
+{
+  "name": "greet",
+  "title": "Greeting strings",
+  "interface": "Two pure string functions: `greet` renders a polite line for a name, `shout` an upper-case one.\n\n```stub\nexport function greet(name: string): string;\nexport function shout(name: string): string;\n```\n",
+  "acceptance": "node --test test/greet.test.mjs",
+  "nl_description": "Example child contract for STUBS.md: the parent `banner` is built against its stub while `greet` has no implementation. Lives under examples/, so it is not part of the build2me contract set.",
+  "serves": "banner",
+  "env": "node>=20"
+}
