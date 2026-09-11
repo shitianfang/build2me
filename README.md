@@ -139,7 +139,7 @@ $ git clone https://github.com/shitianfang/build2me
 $ cd build2me
 $ node tools/init.mjs ../my-system --root my-system
 build2me project created at /.../my-system
-  root contract: my-system    (12 files written)
+  root contract: my-system    (14 files written)
 
 next:
   1. edit contracts/my-system.json — say what the system must do
