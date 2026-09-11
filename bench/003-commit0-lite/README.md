@@ -43,3 +43,4 @@ contamination caveats apply to every Commit0 entry, including this one.
 | wcwidth | 39 / 39 | **100%** | 73.9k | 2026-09-11 |
 | portalocker | 44 / 44 (2 env-skips: no redis server) | **100%** | 85.4k | 2026-09-11 |
 | parsel | 343 / 343 (2 upstream skips) | **100%** | 113.7k | 2026-09-11 |
+| pyjwt | 259 / 259 (2 upstream skips, 1 xfail) | **100%** | 163.8k | 2026-09-11 |
