@@ -1,0 +1,270 @@
+<title>build2me Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #f6f5f1; --surface: #ffffff; --ink: #22282a; --muted: #68716f;
+    --line: #e3e1d9; --done: #2e7d4f; --done-fill: #ddefe4; --open: #a8741a;
+    --open-fill: #f7ecd3; --dep: #8a8f8d; --accent: #175d52; --accent-soft: #e2edea;
+    --code-bg: #eeede7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131719; --surface: #1b2124; --ink: #e6eae8; --muted: #93a09c;
+      --line: #2c3437; --done: #6cc793; --done-fill: #1d3a2b; --open: #dfb35e;
+      --open-fill: #3a2f16; --dep: #7d8583; --accent: #52b3a3; --accent-soft: #1b2f2c;
+      --code-bg: #22282b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #131719; --surface: #1b2124; --ink: #e6eae8; --muted: #93a09c;
+    --line: #2c3437; --done: #6cc793; --done-fill: #1d3a2b; --open: #dfb35e;
+    --open-fill: #3a2f16; --dep: #7d8583; --accent: #52b3a3; --accent-soft: #1b2f2c;
+    --code-bg: #22282b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px; line-height: 1.6;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 24px 72px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px 20px; margin-bottom: 8px; }
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+  h1 .mono { color: var(--accent); }
+  .sub { color: var(--muted); margin: 0 0 22px; max-width: 68ch; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+  .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12.5px;
+    padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--surface); white-space: nowrap;
+  }
+  .chip b { font-weight: 500; }
+  .chip.done { border-color: var(--done); color: var(--done); background: var(--done-fill); }
+  .chip.open { border-color: var(--open); color: var(--open); background: var(--open-fill); }
+  .chip.ci { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  section { margin-top: 44px; }
+  h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 4px; text-wrap: balance; }
+  .h2row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .h2row .note { color: var(--muted); font-size: 14px; }
+  .lede { color: var(--muted); font-size: 14.5px; margin: 0 0 18px; max-width: 78ch; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .dagbox { overflow-x: auto; }
+  svg text { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; color: var(--muted); font-size: 13px; align-items: center; }
+  .legend .k { display: inline-flex; align-items: center; gap: 7px; }
+  .sw { width: 13px; height: 13px; border-radius: 4px; display: inline-block; border: 1.5px solid; }
+  .sw.done { background: var(--done-fill); border-color: var(--done); }
+  .sw.open { background: var(--open-fill); border-color: var(--open); }
+  .edge-demo { width: 34px; height: 0; border-top: 2px solid var(--muted); display: inline-block; }
+  .edge-demo.dash { border-top-style: dashed; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .race { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; position: relative; }
+  .card.winner { border-color: var(--done); box-shadow: 0 0 0 1px var(--done); }
+  .rankbadge {
+    position: absolute; top: -11px; right: 14px; font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px; padding: 2px 10px; border-radius: 999px; background: var(--surface);
+    border: 1px solid var(--line); color: var(--muted);
+  }
+  .card.winner .rankbadge { border-color: var(--done); color: var(--done); background: var(--done-fill); }
+  .card h3 { margin: 2px 0 10px; font-size: 17px; }
+  .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 0 0 10px; }
+  .m { background: var(--code-bg); border-radius: 9px; padding: 7px 10px; }
+  .m .v { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 15px; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .m .l { font-size: 11.5px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+  .m.pass .v { color: var(--done); }
+  .card p { font-size: 13.5px; color: var(--muted); margin: 0; }
+  .verdicts { margin-top: 16px; }
+  .verdicts ul { margin: 8px 0 0; padding-left: 20px; font-size: 14px; }
+  .verdicts li { margin: 5px 0; }
+  .verdicts li::marker { color: var(--accent); }
+  .callout {
+    border-left: 3px solid var(--open); background: var(--open-fill);
+    border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 14px; margin-top: 16px;
+  }
+  .callout b { color: var(--open); }
+  .callout.green { border-left-color: var(--done); background: var(--done-fill); }
+  .callout.green b { color: var(--done); }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .grid3 h3 { font-size: 15px; margin: 0 0 6px; }
+  .grid3 p { font-size: 13.5px; color: var(--muted); margin: 0; }
+  code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.88em; background: var(--code-bg); padding: 1.5px 6px; border-radius: 6px; }
+  footer { margin-top: 52px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; display: flex; gap: 18px; flex-wrap: wrap; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .card { transition: transform .15s ease; }
+    .card:hover { transform: translateY(-2px); }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><span class="mono">build2me</span> Atlas</h1>
+    <div class="chips" id="chips"></div>
+  </header>
+  <p class="sub">prove2me 协议移植到软件工程的自举仓库：不可变契约 DAG、无锁并行、级联验证。本页数据来自
+    <span class="mono">tools/graph.mjs --format json</span> 的真实输出与 Race 001 的实测记录。</p>
+
+  <section>
+    <div class="h2row"><h2>契约 DAG</h2><span class="note" id="dag-note"></span></div>
+    <p class="lede">每个节点是一份不可变契约，状态由验证器在读取时派生，从不存储。虚线 = 草案分解，实线 = 已被接受的提交。最后一个子契约关闭的瞬间，root 的集成门经级联真实运行——它第一次运行就抓住了一个自引用缺陷（完成门查询精确前沿会重入自身），门修复后级联通过，<b>11 份契约全部 Done，本仓库完成了自己的根契约</b>。</p>
+    <div class="panel dagbox"><div id="dag"></div>
+      <div class="legend">
+        <span class="k"><span class="sw done"></span>DONE（验收门实测通过）</span>
+        <span class="k"><span class="sw open"></span>OPEN</span>
+        <span class="k"><span class="edge-demo dash"></span>SKETCH_ACCEPTED</span>
+        <span class="k"><span class="edge-demo"></span>ACCEPTED</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="h2row"><h2>Race 001 — 三个 agent 并行搜索同一契约的解空间</h2><span class="note">契约 <span class="mono">deprecation-cascade</span></span></div>
+    <p class="lede">三个 Opus agent、三份隔离副本、同一份不可变契约、同一个赛前写死的验收门。评审协议在任何解存在之前预注册入库；幸存者去署名后按五条 rubric 成对盲评，只取排序、必须引用代码证据。</p>
+    <div class="race" id="race"></div>
+    <div class="panel verdicts">
+      <b>盲评裁决（逐条 rubric 成对比较后的最终排序依据）</b>
+      <ul id="verdict-list"></ul>
+    </div>
+    <div class="callout"><b>门缺陷事件：</b>fixture 缺少 <span class="mono">laws/deprecations.log</span>，三个 agent 彼此隔离却各自独立诊断出同一缺陷、给出同一最小修复——并行搜索顺带完成了对"陈述"本身的模糊测试。协议教训已入库：<b>门必须在发布前对参照空实现跑过一次</b>。</div>
+    <div class="callout green" id="merge-note"></div>
+  </section>
+
+  <section>
+    <div class="h2row"><h2>这张图为什么能无锁运转</h2></div>
+    <div class="grid3">
+      <div class="panel"><h3>契约不可变</h3><p>发布后永不编辑，只能废止追加。任何时刻针对某契约完成的工作永远有效，所以并行提交无需协调、无需合并仲裁——首个通过验收者胜。</p></div>
+      <div class="panel"><h3>级联是真实执行的</h3><p>数学里组合免费（Curry–Howard）；软件里不是。父契约的验收是集成测试，在最后一个子契约关闭的瞬间真实运行——不过就把父级留在前沿。</p></div>
+      <div class="panel"><h3>调度器是一个标量</h3><p><span class="mono">closability</span>：关掉这个叶子能级联解决多少祖先。agent 从这个排序里自取工作，没有任务板，没有认领。</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>仓库 <a href="https://github.com/shitianfang/build2me">github.com/shitianfang/build2me</a></span>
+    <span>协议 <a href="https://github.com/shitianfang/build2me/blob/main/PROTOCOL.md">PROTOCOL.md</a></span>
+    <span>赛事档案 <a href="https://github.com/shitianfang/build2me/blob/main/races/001-deprecation-cascade.md">races/001</a></span>
+    <span>血缘 <a href="https://arxiv.org/abs/2608.28433">Prove2Me (arXiv 2608.28433)</a></span>
+  </footer>
+</div>
+
+<script>
+const DATA = {
+  snapshot: '2026-09-11 · commit series c8c9→root-closure',
+  ci: 'green (25s)',
+  nodes: [
+    { name: 'root', serves: null, status: 'done' },
+    { name: 'protocol-spec', serves: 'root', status: 'done' },
+    { name: 'verifier', serves: 'root', status: 'done' },
+    { name: 'frontier-tool', serves: 'root', status: 'done' },
+    { name: 'immutability-check', serves: 'root', status: 'done' },
+    { name: 'example-flow', serves: 'root', status: 'done' },
+    { name: 'dag-viz', serves: 'root', status: 'done' },
+    { name: 'deprecation-cascade', serves: 'root', status: 'done' },
+    { name: 'typed-stub-semantics', serves: 'root', status: 'done' },
+    { name: 'agent-server', serves: 'root', status: 'done' },
+    { name: 'slow-loop-instruments', serves: 'root', status: 'done' }
+  ],
+  edges: [
+    { from: 'root', to: 'protocol-spec', verdict: 'ACCEPTED' },
+    { from: 'root', to: 'verifier', verdict: 'ACCEPTED' },
+    { from: 'root', to: 'frontier-tool', verdict: 'ACCEPTED' },
+    { from: 'root', to: 'immutability-check', verdict: 'ACCEPTED' },
+    { from: 'root', to: 'example-flow', verdict: 'ACCEPTED' },
+    { from: 'root', to: 'typed-stub-semantics', verdict: 'ACCEPTED' },
+    { from: 'root', to: 'deprecation-cascade', verdict: 'ACCEPTED' },
+    { from: 'root', to: 'agent-server', verdict: 'ACCEPTED' },
+    { from: 'root', to: 'slow-loop-instruments', verdict: 'ACCEPTED' },
+    { from: 'root', to: 'dag-viz', verdict: 'SKETCH_ACCEPTED' }
+  ],
+  race: {
+    solutions: [
+      { label: 'Y', rank: 1, gate: 'PASS', loc: 127, ms: 795,
+        approach: '唯一在写日志前就用语法约束挡住 D1 的实现；自己的答案可能不完整时会明确告警；把每一份受影响的 submission 全部列出。' },
+      { label: 'X', rank: 2, gate: 'PASS', loc: 132, ms: 772,
+        approach: '日常错误措辞最贴身、补救建议可直接执行；但在完全合法的含空格契约名上打印成功，却写出引擎读不回的废弃行（D1）。' },
+      { label: 'Z', rank: 3, gate: 'PASS', loc: 134, ms: 784,
+        approach: '定长键值输出最适合脚本消费、概念最少；但共享 D1，另有三处措辞失真（把已知选项报成未知等）。' }
+    ],
+    verdicts: [
+      '拉开名次的不是风格，是报告可信度：X/Z 会在合法输入上宣称成功却让废弃静默失效，并绕过门自己测过的"只能废弃一次"不变量；Y 在写入前拒绝。队长亲手复现 D1 后才接受裁决。',
+      '五条 rubric 全部成对比较并引用代码证据：Y 赢在稳健与诚实（不完整时说出口），X 赢 house style（唯一沿用房规 ERROR: 前缀），Z 赢 simplicity 与输出设计——名次由缺陷决定，不由美观决定。',
+      '评审对胜者也留了作业：三家共同盲点（# 开头的名字被日志格式当注释吞掉）与读回校验——已由队长按建议补进合并版，一个检查关掉整类陷阱。'
+    ],
+    mergeNote: '<b>胜者 Y 已合入 main</b>（tools/deprecate.mjs + 队长补丁），CI 绿；X、Z 完整保留在 <span class="mono">attempts/deprecation-cascade</span> 分支——败者是资产，7% 定律：FLT 最终证明约 7% 的非样板行来自被打捞的失败尝试。'
+  }
+};
+
+function chips() {
+  const c = document.getElementById('chips');
+  const done = DATA.nodes.filter(n => n.status === 'done').length;
+  const open = DATA.nodes.filter(n => n.status === 'open').length;
+  c.innerHTML =
+    `<span class="chip done"><b>${done}</b> DONE</span>` +
+    `<span class="chip open"><b>${open}</b> OPEN</span>` +
+    `<span class="chip ci">CI ${DATA.ci}</span>`;
+  document.getElementById('dag-note').textContent = `快照 ${DATA.snapshot}`;
+}
+
+function drawDag() {
+  const css = getComputedStyle(document.documentElement);
+  const col = k => css.getPropertyValue(k).trim();
+  const root = DATA.nodes.find(n => !n.serves);
+  const kids = DATA.nodes.filter(n => n.serves === root.name);
+  const rows = [kids.slice(0, 5), kids.slice(5)];
+  const W = 1040, NW = 186, NH = 54, GX = 20, ROWY = [30, 190, 300];
+  const pos = {};
+  pos[root.name] = { x: (W - NW) / 2, y: ROWY[0] };
+  rows.forEach((row, r) => {
+    const total = row.length * NW + (row.length - 1) * GX;
+    row.forEach((n, i) => { pos[n.name] = { x: (W - total) / 2 + i * (NW + GX), y: ROWY[r + 1] }; });
+  });
+  const seen = new Set(); let edges = '';
+  for (const e of DATA.edges) {
+    const k = e.from + '>' + e.to;
+    if (seen.has(k) || !pos[e.from] || !pos[e.to]) continue;
+    seen.add(k);
+    const a = pos[e.from], b = pos[e.to];
+    const x1 = a.x + NW / 2, y1 = a.y + NH, x2 = b.x + NW / 2, y2 = b.y;
+    const solid = e.verdict === 'ACCEPTED';
+    edges += `<path d="M${x1},${y1} C${x1},${y1 + 46} ${x2},${y2 - 46} ${x2},${y2}" fill="none"
+      stroke="${solid ? col('--done') : col('--muted')}" stroke-width="1.7"
+      ${solid ? '' : 'stroke-dasharray="6 5" opacity="0.75"'}/>`;
+  }
+  let nodes = '';
+  for (const n of DATA.nodes) {
+    const p = pos[n.name]; if (!p) continue;
+    const stroke = n.status === 'done' ? col('--done') : n.status === 'open' ? col('--open') : col('--dep');
+    const fill = n.status === 'done' ? col('--done-fill') : n.status === 'open' ? col('--open-fill') : col('--code-bg');
+    nodes += `<g>
+      <rect x="${p.x}" y="${p.y}" rx="11" width="${NW}" height="${NH}" fill="${fill}" stroke="${stroke}" stroke-width="1.6"/>
+      <text x="${p.x + NW / 2}" y="${p.y + 24}" text-anchor="middle" font-size="13" font-weight="500" fill="${col('--ink')}">${n.name}</text>
+      <text x="${p.x + NW / 2}" y="${p.y + 41}" text-anchor="middle" font-size="10.5" letter-spacing="1" fill="${stroke}">${n.status.toUpperCase()}</text>
+    </g>`;
+  }
+  document.getElementById('dag').innerHTML =
+    `<svg viewBox="0 0 ${W} ${ROWY[2] + NH + 26}" width="100%" style="min-width:900px" role="img" aria-label="build2me contract DAG">${edges}${nodes}</svg>`;
+}
+
+function race() {
+  const r = document.getElementById('race');
+  r.innerHTML = DATA.race.solutions.map(s => `
+    <div class="card ${s.rank === 1 ? 'winner' : ''}">
+      <span class="rankbadge">${s.rank === 1 ? '① 胜者 · 已合入 main' : s.rank === 2 ? '② 次席' : '③ 第三'}</span>
+      <h3>方案 <span class="mono">${s.label}</span></h3>
+      <div class="metrics">
+        <div class="m pass"><div class="v">${s.gate}</div><div class="l">验收门</div></div>
+        <div class="m"><div class="v">${s.loc}</div><div class="l">行数</div></div>
+        <div class="m"><div class="v">${s.ms}ms</div><div class="l">门耗时</div></div>
+      </div>
+      <p>${s.approach}</p>
+    </div>`).join('');
+  document.getElementById('verdict-list').innerHTML =
+    DATA.race.verdicts.map(v => `<li>${v}</li>`).join('');
+  document.getElementById('merge-note').innerHTML = DATA.race.mergeNote;
+}
+
+chips(); drawDag(); race();
+const mq = matchMedia('(prefers-color-scheme: dark)');
+mq.addEventListener?.('change', drawDag);
+</script>
