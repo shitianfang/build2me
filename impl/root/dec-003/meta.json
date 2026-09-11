@@ -1,0 +1,6 @@
+{
+  "contract": "root",
+  "kind": "decomposition",
+  "imports": ["protocol-spec", "verifier", "frontier-tool", "immutability-check", "example-flow", "dag-viz", "typed-stub-semantics", "deprecation-cascade", "agent-server", "slow-loop-instruments", "project-init"],
+  "files": ["PROTOCOL.md"],
+  "notes": "Supersedes dec-002: the system must also let someone start their own project, not only read this one." }

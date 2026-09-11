@@ -1,0 +1,9 @@
+{
+  "name": "project-init",
+  "title": "Scaffold a new build2me project",
+  "interface": "CLI: node tools/init.mjs <target-dir> [--root <contract-name>] [--force]. Creates a complete, immediately verifiable build2me project at target-dir: contracts/ holding one root contract, impl/, laws/ (laws.md + append-only deprecations.log), acceptance/ holding a starter gate for the root, and a copy of the kernel toolset. Refuses a non-empty target unless --force. The created project must verify green (exit 0) with its root Open, and its frontier must list exactly that root.",
+  "acceptance": "node --test acceptance/project-init.test.mjs",
+  "nl_description": "The entry point for anyone who wants to USE the protocol rather than read it: one command turns an empty directory into a working contract DAG with the kernel installed, ready for the first decomposition.",
+  "serves": "root",
+  "env": "node>=20"
+}
