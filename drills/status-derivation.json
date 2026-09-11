@@ -1,0 +1,9 @@
+{
+  "id": "status-derivation",
+  "prompt": "A contract file in this project carries no status field, yet `node tools/verify.mjs` prints DONE or OPEN for every contract. Find where a contract's status is derived from its submissions and acceptance gates. Answer with the file path and the name of the function that does it.",
+  "expected": {
+    "files_to_find": ["tools/lib.mjs"],
+    "answer_pattern": "computeStatus"
+  },
+  "budget": { "max_files_read": 4, "max_turns": 3 }
+}

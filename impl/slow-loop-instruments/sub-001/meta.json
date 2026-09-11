@@ -1,0 +1,7 @@
+{
+  "contract": "slow-loop-instruments",
+  "kind": "implementation",
+  "imports": [],
+  "files": ["tools/misalign.mjs", "tools/drill.mjs", "drills/status-derivation.json", "drills/append-only-enforcement.json", "drills/results.log"],
+  "notes": "v0.1 is bookkeeping only: misalign.mjs mines git co-change history against the file ownership and import edges declared by submissions; drill.mjs defines drills, judges a cold agent's reported attempt against expectations plus a files-read/turns budget, and appends to the append-only drills/results.log. The cold agent itself stays external — no model calls here."
+}

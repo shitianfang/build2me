@@ -1,0 +1,9 @@
+{
+  "id": "append-only-enforcement",
+  "prompt": "Deprecating a contract appends one line to a log file, and that file may never be rewritten. Find the log file and the tool that enforces the append-only rule in CI. Answer with both paths and the name of the enforcing tool.",
+  "expected": {
+    "files_to_find": ["laws/deprecations.log", "tools/check-immutability.sh"],
+    "answer_pattern": "check-immutability"
+  },
+  "budget": { "max_files_read": 6, "max_turns": 3 }
+}
