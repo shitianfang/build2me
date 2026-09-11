@@ -41,3 +41,4 @@ contamination caveats apply to every Commit0 entry, including this one.
 | voluptuous | 149 / 149 | **100%** | 145.6k | 2026-09-11 |
 | deprecated | 171 / 171 | **100%** | 61.8k | 2026-09-11 |
 | wcwidth | 39 / 39 | **100%** | 73.9k | 2026-09-11 |
+| portalocker | 44 / 44 (2 env-skips: no redis server) | **100%** | 85.4k | 2026-09-11 |
