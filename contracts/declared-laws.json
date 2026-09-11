@@ -1,0 +1,9 @@
+{
+  "name": "declared-laws",
+  "title": "Laws as machine objects: one enforced floor per quality dimension",
+  "interface": "Each laws/<id>.json declares {id, dimension, statement, check}: id equals the file name, dimension names the quality axis it guards, statement says the floor in prose, check is a shell command run from the project root that exits 0 iff the law holds. node tools/verify.mjs runs every declared law's check on every pass (sanitized environment, same as acceptance gates) and exits non-zero on violation, reporting the law's id, dimension and statement; a malformed law file is a structural error, not a crash. laws/laws.md stays the human-readable index. A law's check must never invoke the verifier (re-entrance).",
+  "acceptance": "node --test acceptance/declared-laws.test.mjs",
+  "nl_description": "The protocol's third object, made real. A contract is a local statement (this part works); a law is a global one (every part conforms). Dimensions beyond functional correctness — legibility, complexity budgets, docs honesty — each hold a machine-checked floor set at measured reality; iterating means deliberately tightening a floor, never losing ground silently.",
+  "serves": "root",
+  "env": "node>=20"
+}

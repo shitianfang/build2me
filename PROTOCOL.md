@@ -162,6 +162,19 @@ false, requirements do.
 `laws/` is the project's axiom system: the rules that make judgment-flavored
 dimensions (style, structure, budgets) machine-checkable. A law is only a law
 if the verifier or CI enforces it; prose without a check is advice.
+
+A declared law is one file, `laws/<id>.json`: `{id, dimension, statement,
+check}` — `id` equals the file name, `dimension` names the quality axis,
+`statement` says the floor in prose, and `check` is a shell command (run from
+the project root, sanitized like a gate) that exits 0 iff the floor holds.
+The verifier runs every declared law on every pass and fails verification on
+violation. A law's check must never invoke the verifier (re-entrance).
+
+Which dimensions a project needs is **discovered while building it, never
+fixed in advance**: when a quality problem bites, measure today's level, set
+the floor there, and declare the law — from then on that ground cannot be
+lost silently. Iterating on a dimension means deliberately tightening its
+floor.
 Lean-grade instant verdicts are always *conformance to a declared law*, never
 "goodness" in the abstract — so taste lives in the laws (amended deliberately,
 by humans, with git as the version history), while conformance is automatic.

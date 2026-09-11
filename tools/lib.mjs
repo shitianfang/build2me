@@ -15,7 +15,7 @@ export function loadProject(dir) {
   const cdir = path.join(dir, 'contracts');
   if (!fs.existsSync(cdir)) {
     errors.push(`no contracts/ directory in ${dir}`);
-    return { dir, contracts, submissions: [], deprecated: new Set(), errors };
+    return { dir, contracts, submissions: [], laws: [], deprecated: new Set(), errors };
   }
   for (const file of fs.readdirSync(cdir).filter((f) => f.endsWith('.json')).sort()) {
     let c;
@@ -71,6 +71,27 @@ export function loadProject(dir) {
     }
   }
 
+  const laws = [];
+  const ldir = path.join(dir, 'laws');
+  if (fs.existsSync(ldir)) {
+    for (const file of fs.readdirSync(ldir).filter((f) => f.endsWith('.json')).sort()) {
+      let l;
+      try {
+        l = JSON.parse(fs.readFileSync(path.join(ldir, file), 'utf8'));
+      } catch (e) {
+        errors.push(`laws/${file}: invalid JSON (${e.message})`);
+        continue;
+      }
+      for (const f of ['id', 'dimension', 'statement', 'check']) {
+        if (typeof l[f] !== 'string' || l[f].trim() === '') errors.push(`laws/${file}: missing or empty field "${f}"`);
+      }
+      if (l.id !== path.basename(file, '.json')) {
+        errors.push(`laws/${file}: id "${l.id}" must match file name`);
+      }
+      laws.push(l);
+    }
+  }
+
   const deprecated = new Set();
   const dfile = path.join(dir, 'laws', 'deprecations.log');
   if (fs.existsSync(dfile)) {
@@ -81,7 +102,7 @@ export function loadProject(dir) {
     }
   }
 
-  return { dir, contracts, submissions, deprecated, errors };
+  return { dir, contracts, submissions, laws, deprecated, errors };
 }
 
 function findCycle(project) {
@@ -131,10 +152,7 @@ export function computeStatus(project, opts = {}) {
   }
 
   const gates = new Map();
-  // Gates must run in a sanitized environment: an outer `node --test` exports
-  // NODE_TEST_CONTEXT, and a nested test runner inheriting it exits 0 even on
-  // failure — a gate that can be fooled is no gate.
-  const gateEnv = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('NODE_TEST_')));
+  const gateEnv = sanitizedEnv();
   const gateOf = (name) => {
     if (!runAcceptance) return { ok: true, skipped: true };
     if (gates.has(name)) return gates.get(name);
@@ -171,6 +189,19 @@ export function computeStatus(project, opts = {}) {
   return { status, verdicts, gates, errors: [...project.errors, ...errors] };
 }
 
+// Gates and law checks must run in a sanitized environment: an outer
+// `node --test` exports NODE_TEST_CONTEXT, and a nested test runner
+// inheriting it exits 0 even on failure — a check that can be fooled is
+// no check.
+function sanitizedEnv() {
+  return Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('NODE_TEST_')));
+}
+
+// Laws: the project's enforced floors, one per quality dimension.
+//  - Built-in L1 (zero runtime dependencies) is part of the kernel.
+//  - Declared laws (laws/<id>.json) each carry a check command, run from the
+//    project root exactly like an acceptance gate. A law's check must never
+//    invoke the verifier: verify runs the laws, so that would re-enter.
 // Built-in law L1: tools must have zero runtime dependencies.
 export function checkLaws(project) {
   const errors = [];
@@ -183,6 +214,14 @@ export function checkLaws(project) {
       }
     } catch (e) {
       errors.push(`package.json: invalid JSON (${e.message})`);
+    }
+  }
+  for (const l of project.laws ?? []) {
+    if (['id', 'dimension', 'statement', 'check'].some((f) => typeof l[f] !== 'string' || l[f].trim() === '')) continue; // already a structural error
+    const r = spawnSync(l.check, { cwd: project.dir, shell: true, encoding: 'utf8', timeout: 120000, env: sanitizedEnv() });
+    if (r.status !== 0) {
+      const detail = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
+      errors.push(`law ${l.id} (${l.dimension}) violated: ${l.statement}${detail ? `\n${detail}` : ''}`);
     }
   }
   return errors;

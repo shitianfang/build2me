@@ -8,7 +8,7 @@ them, a verifier is the only judge, and finished parts compose by cascade.
 [Protocol](PROTOCOL.md) · [Stub semantics](STUBS.md) · [Rendered DAG](docs/DAG.md) · [Race 001](races/001-deprecation-cascade.md) · [中文](README.zh-CN.md)
 
 [![verify](https://github.com/shitianfang/build2me/actions/workflows/verify.yml/badge.svg)](https://github.com/shitianfang/build2me/actions/workflows/verify.yml)
-**12 / 12 contracts Done · frontier empty · built by a swarm under its own protocol**
+**13 / 13 contracts Done · frontier empty · built by a swarm under its own protocol**
 
 ```sh
 node tools/init.mjs ../my-system --root my-system   # scaffold your own project
@@ -18,30 +18,35 @@ node tools/init.mjs ../my-system --root my-system   # scaffold your own project
 
 ## What this is for
 
-An agent session with a full context window is already a good engineer. What it
-cannot do is **run long**: contexts fill, sessions die, and every restart loses
-the plan, the state of the work, and the reasons behind each decision. Past a
-certain mission size — days of wall-clock, several agents, nobody watching —
-the limiting factor stops being intelligence and becomes infrastructure: where
-does intent live when no session holds it? Whose word is "done" when no one
-reviews the work? How does the next agent know what to do without being told?
+Three things matter when agents build something bigger than one session:
 
-build2me is that infrastructure — **foundational support for long-horizon
-autonomous agent operation**. Each mechanism is one of those questions answered
-as a file format or a derivation rule:
+**1. A map of the solution space.** Which parts are solved — verified, and
+nobody can quietly break them again. Which parts are still open. Which paths
+were tried, failed, and why — kept, so the next agent doesn't pay for the same
+dead end twice. The map is the repository itself: `contracts/` are the nodes,
+verdicts mark the solved regions, failed submissions and deprecations mark the
+explored dead ends, and `node tools/graph.mjs --format json` prints the whole
+map — per-node attempt history, abandonment reasons, and each dimension's
+floor — for any tool to render.
 
-| long-horizon failure | the protocol's answer |
-|---|---|
-| intent dies with the session | `contracts/` — the mission as immutable, machine-checkable statements that outlive every author |
-| "done" relies on self-report | the verifier — status derived at read time from gates; never stored, never claimed |
-| every new agent needs onboarding | the frontier — a cold agent reads what is open and actionable, and continues; no handoff document |
-| parallel agents interfere | immutability + optimistic concurrency — nothing is ever edited, so nothing is contended |
-| requirements change mid-mission | deprecation cascade — history is never rewritten; dependents re-open mechanically |
-| lessons evaporate between sessions | submissions and failed attempts stay searchable; laws freeze wins into enforced rules |
+**2. Decomposition follows the task — it is never fixed up front.** At the
+start you don't know what the right parts are, or which qualities will need
+optimizing. So you split the task as you understand it today; when building
+teaches you a better split, deprecate and re-split — history stays. Dimensions
+are discovered the same way: a page that got slow, a module nobody can read, a
+doc that lied.
 
-**What it is not for:** a task that fits inside one session's context is
-cheaper done directly in that session. Contracts, gates and verification buy
-durability and trust, and they pay off only when the work outlives its workers.
+**3. A foothold in every dimension, and ratchets everywhere.** "It works" is
+one dimension; its foothold is the acceptance gate — once green, it may never
+quietly go red again. Every other quality the task turns out to need gets the
+same treatment the moment it bites: measure today's level, freeze it as a law
+(`laws/<id>.json` — a check the verifier runs on every pass), and from then on
+that ground cannot be lost silently. Progress means closing open contracts and
+deliberately tightening floors. Never backwards.
+
+**The honest limit:** a task that fits inside one session's context is cheaper
+done directly in that session. This pays off when the work outlives its
+workers — sessions end; the map remains.
 
 The precedent that this works at scale is
 [Prove2Me](https://arxiv.org/abs/2608.28433): agents co-editing shared files
@@ -80,12 +85,23 @@ children it `imports`. Those imports are the DAG's edges:
   "files": ["src/calc.mjs"], "notes": "calc implemented against add and mul" }
 ```
 
-**3. Law** — the project's axiom system, in `laws/laws.md`: the rules every
-submission must conform to, each backed by a check. *A law is only a law if
-something enforces it; prose without a check is advice.* Laws are where
-judgment-shaped dimensions (style, structure, budgets) become instantly
-decidable — conformance is checkable in milliseconds, but only relative to the
-law as written, which humans amend deliberately.
+**3. Law** — one enforced floor per quality dimension, `laws/<id>.json`:
+
+```json
+{
+  "id": "l5-tool-size",
+  "dimension": "complexity",
+  "statement": "no kernel tool exceeds 400 lines; split it or amend this law deliberately",
+  "check": "node laws/checks/l5-tool-size.mjs"
+}
+```
+
+The verifier runs every law's `check` on every pass and fails verification on
+violation. *A law is only a law if something enforces it; prose without a
+check is advice.* Which dimensions a project needs is discovered while
+building, never fixed in advance — when a quality problem bites, measure
+today's level, set the floor there, and it can never be lost silently again.
+`laws/laws.md` is the human-readable index.
 
 Everything else — statuses, verdicts, the work queue, completion — is **derived**
 by the verifier. Nothing is stored, nothing is negotiated.

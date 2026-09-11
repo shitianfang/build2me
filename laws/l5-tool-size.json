@@ -1,0 +1,6 @@
+{
+  "id": "l5-tool-size",
+  "dimension": "complexity",
+  "statement": "no kernel tool exceeds 400 lines; split it or amend this law deliberately",
+  "check": "node laws/checks/l5-tool-size.mjs"
+}

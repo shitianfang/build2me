@@ -140,9 +140,20 @@ A law is only a law if something enforces it. Prose without a check is advice.
   publish a successor under a new name.
 - **L2 — deprecations.log is append-only.** Enforced by the same script.
 
-Add your own below. Good candidates: dependency direction, style tokens,
-performance budgets, security scans — anything you would otherwise repeat in
-review.
+Add your own as you build — not before. You cannot know up front which
+dimensions this project needs to hold; you discover them: a slow page, an
+unreadable module, a doc that lied. The moment one bites, freeze it as a law
+so it can never bite again unnoticed:
+
+1. Measure where you stand today; that number is the floor (the ground you
+   already hold — start there, not at where you wish you were).
+2. Write \`laws/<id>.json\` with {id, dimension, statement, check} — check is
+   a command that exits 0 while the floor holds. The verifier runs it on
+   every pass from now on.
+3. Tighten the floor deliberately when you have margin; never loosen it
+   silently.
+
+A check must never call verify.mjs (verify runs the laws — it would re-enter).
 `);
 
 write(path.join('laws', 'deprecations.log'), '# append-only — one line per deprecated contract: <contract-name> <reason>\n');

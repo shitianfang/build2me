@@ -1,0 +1,7 @@
+{
+  "contract": "declared-laws",
+  "kind": "implementation",
+  "imports": [],
+  "files": ["tools/lib.mjs", "laws/l4-english.json", "laws/l5-tool-size.json", "laws/l6-status-honest.json", "laws/checks/l4-english.mjs", "laws/checks/l5-tool-size.mjs", "laws/checks/l6-status-honest.mjs"],
+  "notes": "Gate published and run red (4 unmet assertions, no crashes) before this implementation existed. The three first laws are this repo's own audit findings turned into floors: L4 was declared but unenforced, L6 kills the twice-stale hand-typed status line, L5 is a complexity foothold above today's largest tool. Law checks must never call verify.mjs (re-entrance; L6 uses graph.mjs --structural for that reason)."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "l6-status-honest",
+  "dimension": "docs",
+  "statement": "the status line in each README equals the derived DAG status (structural)",
+  "check": "node laws/checks/l6-status-honest.mjs"
+}
