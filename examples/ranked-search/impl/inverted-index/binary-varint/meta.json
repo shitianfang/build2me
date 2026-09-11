@@ -1,0 +1,13 @@
+{
+  "contract": "inverted-index",
+  "kind": "implementation",
+  "imports": [
+    "text-analyzer",
+    "corpus-reader"
+  ],
+  "files": [
+    "lib/index-format.mjs",
+    "acceptance/inverted-index.test.mjs"
+  ],
+  "notes": "One file, index/index.bin, documented at the top of lib/index-format.mjs and in docs/DESIGN.md.\nImports text-analyzer because indexing and lookup both tokenize through it, and corpus-reader\nbecause the gate measures the real corpus through readCorpus.\n\nWhy binary and not JSON: JSON postings ran several times the corpus size; the binary layout\nholds indexBytes/corpusBytes at 0.3148 (laws/index-size.json). Where the bytes went, in order:\npostings 22.1 KB, term dictionary 3.0 KB, offset tables 2.5 KB, doc ids 0.9 KB, lengths 0.2 KB.\nNarrowing the three offset tables from u32 to the width their largest entry needs took the\nindex from 31337 to 28910 bytes (~8%) with no behaviour change.\n\nNext lever if size is ever the binding dimension: the term dictionary offsets are the only\nremaining fixed-cost table (one entry per term). A block-skip index — a full offset every 16th\nterm, scanning within the block — would cut that to about a sixteenth for roughly a hundred\nlines of extra code and a slightly slower lookup. Not done: 3% of the index is not worth the\nreader complexity at this corpus size. Postings themselves are already ~2 bytes per pair;\nbeating that needs bit-packing (PForDelta), which is a different contract.\n\nwriteIndex serialises the whole file in memory BEFORE it removes the old directory, so a\nfailure cannot leave a half-written index. Both mutants (stale files surviving a rewrite,\ntitle frequencies dropped from postings) are caught by the gate."
+}

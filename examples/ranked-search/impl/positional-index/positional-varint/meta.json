@@ -1,0 +1,14 @@
+{
+  "contract": "positional-index",
+  "kind": "implementation",
+  "imports": [
+    "text-analyzer",
+    "corpus-reader"
+  ],
+  "files": [
+    "lib/index-format.mjs",
+    "acceptance/positional-index.test.mjs",
+    "acceptance/inverted-index.test.mjs"
+  ],
+  "notes": "Supersedes impl/inverted-index/binary-varint in place: same file, same reader interface, one\nformat version higher (B2SI v2). The v1 file is REFUSED rather than misread, which matters because\nindex/ is scratch — a stale v1 index on someone's disk must say \"re-index\", not answer wrongly.\n\nWhat changed: postings carry positions instead of frequencies. Per term: varint df, then per\ndocument (docGap * 2 + [tf === 1]) | tf if tf > 1 | pos0 | (delta - 1) x (tf - 1). Title tokens of a\ndocument occupy 0..titleLen-1 and body tokens start at titleLen + 1; the skipped coordinate is the\nfield boundary, so no phrase can straddle title and body, and a posting's title count is just the\nnumber of its positions below titleLen. titleLen is persisted (docTitleLens section) because that\nderivation needs it — which is also how the v1 packedTf byte disappeared: tf is now the number of\npositions, not a stored number.\n\nSizes, measured on sample-docs.jsonl (91 836 corpus bytes, 13 973 occurrences over 10 753 postings):\n  v1, frequencies only                          28 910 bytes   0.3148\n  v2, naive (docGap | tf | positions)           43 396 bytes   0.4725\n  v2, tf==1 folded into the doc gap's low bit   34 224 bytes   0.3727  <- shipped\nThe fold is worth 25% of the postings section because a term occurs once in a document far more\noften than not, and a doc gap almost always has a spare bit before it needs a second varint byte.\nlaws/index-size.json was raised 0.32 -> 0.38 for this, deliberately and once; see its statement.\n\nDead ends measured and rejected: a forward index (one term id per token, ids assigned by descending\nfrequency) came out ~4 KB larger than positional postings and answers nothing else; a continuation\nbit per position instead of a tf count came out 2.7 KB worse than the doc-gap fold. Still on the\ntable if size ever binds again: front-coding the term dictionary (~3 KB section) and block-skip term\noffsets (~1.1 KB table). Neither is worth the reader complexity at this corpus size.\n\nThe gate runs the deprecated inverted-index gate too. That was not a courtesy: the v1 gate asserts\ntitle/body frequencies through .map((p) => [p.doc, p.body, p.title]), so a positions-only reader\nthat got the derivation wrong fails it. Positions themselves are pinned against a brute-force\nre-tokenization of the whole corpus in acceptance/positional-index.test.mjs."
+}

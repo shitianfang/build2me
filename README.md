@@ -293,6 +293,28 @@ means:
   implementations — worth it there, because the discarded ones surfaced a defect
   and a gate erratum, but that is a choice per contract, not a free lunch.
 
+## A measured example
+
+`examples/ranked-search/` is a ranked full-text search CLI built in three
+rounds, each round by a fresh agent with no memory of the last, entirely
+under the protocol: build, then a mid-task requirement change (exact-phrase
+queries — three contracts deprecated and superseded, dependents re-pointed),
+then an optimization round. A hidden pre-registered judge scored every
+round; the same task was run in parallel by plain agent sessions with no
+protocol, same model, same prompts.
+
+| round | quality (P@10 term / phrase) | index size | p95 |
+|---|---|---|---|
+| build | 0.83 / — | 0.2525 | 101 ms |
+| phrases added | 0.83 / 0.78 (max .80) | 0.3036 | 109 ms |
+| optimize | 0.83 / 0.78 | **0.2136** | 98 ms |
+
+Held ground stayed held (no metric regressed in any round), the floors
+moved with receipts (index-size law 0.32 → 0.38 when positions were paid
+for, → 0.26 after interpolative coding), and the whole run cost 1.15x the
+tokens of the plain arm — full numbers, including where the plain arm was
+better, in [bench/002-ranked-search/results.md](bench/002-ranked-search/results.md).
+
 ## This repository is self-hosting — and closed its own root
 
 build2me was built under its own protocol, by a swarm. The system is the `root`

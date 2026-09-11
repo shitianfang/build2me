@@ -1,0 +1,6 @@
+{
+  "id": "phrase-exactness",
+  "dimension": "phrase",
+  "statement": "A quoted query returns ALL and ONLY the documents in which the phrase occurs adjacent and in order: mean precision and mean recall are both exactly 1.0 over the 539 labelled phrase queries in bench/queries.json (measured level: 1.0 / 1.0). 333 of them are phrases the corpus does not contain — reversed pairs, words straddling the title/body boundary, words far apart in the same document — because a filter that never filters scores perfectly on matching phrases alone. Exactness is pass/fail, so this floor is the only one that can never be raised or lowered, only broken.",
+  "check": "node bench/measure.mjs --only phrase --assert 'phrasePrecision==1' --assert 'phraseRecall==1'"
+}

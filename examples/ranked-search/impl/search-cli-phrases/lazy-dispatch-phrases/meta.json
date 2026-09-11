@@ -1,0 +1,17 @@
+{
+  "contract": "search-cli-phrases",
+  "kind": "implementation",
+  "imports": [
+    "corpus-reader",
+    "text-analyzer",
+    "positional-index",
+    "phrase-matching",
+    "bm25-ranking"
+  ],
+  "files": [
+    "search.mjs",
+    "acceptance/search-cli-phrases.test.mjs",
+    "acceptance/search-cli.test.mjs"
+  ],
+  "notes": "Supersedes impl/search-cli-phrases/thin-dispatch-phrases. Same dispatch, same three commands, same\nerror funnel, same composition-only rule — but the process it starts is measurably cheaper, which\nmatters because the judged unit of speed is a whole process and roughly four fifths of it is node\nbooting. Everything below was measured on this machine against the previous file, interleaved with an\nempty `node -e 0` so the comparison is not a reading of the host's mood:\n\n  import process from 'node:process'   ~3.0 ms   deleted; `process` is a global here\n  eager import of all five libraries   ~1.4 ms   each command now imports what it calls, and only that\n  process.stdout.write                 ~0.7 ms   replaced by fs.writeSync to fd 1\n\nNet: the program's own cost above an empty node process fell from ~18 ms to ~11 ms (fastest-run\nbasis), p50 from ~82 to ~78 ms on a box where p95 swings 85-112 ms by itself. laws/query-latency.json\nwas tightened onto the ratio rather than the milliseconds for exactly that reason.\n\n`query` therefore never parses lib/corpus.mjs and `stats` parses only lib/index-format.mjs; the\nPromise.all is one round of resolution rather than four sequential awaits. Top-level await costs\nnothing measurable (checked: an await of null is within noise of an empty module).\n\nfs.writeSync also removes a real hazard rather than only ~0.7 ms: process.exit can truncate a pending\nasynchronous stream write, and every error path here is a write immediately followed by exit(1). The\nloop around it handles a short write, which a pipe is allowed to do.\n\nDeliberately NOT done: skipping lib/phrase.mjs when the query holds no double quote. It would save\n~0.6 ms on unquoted queries, and it would put \"a phrase is marked by a double quote\" in the CLI,\nwhich is phrase-matching's statement. The composition layer is allowed to be slower than a layering\nviolation."
+}

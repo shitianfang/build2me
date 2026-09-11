@@ -1,0 +1,9 @@
+{
+  "name": "text-analyzer",
+  "title": "text-analyzer: one deterministic tokenizer shared by indexing and querying",
+  "interface": "Module `lib/analyze.mjs`.\n\n```stub\nexport function tokenize(text: string): string[];\n```\n\nSemantics:\n- Lowercases, Unicode-normalizes (NFD) and drops combining marks, so \"Café\" and \"cafe\"\n  produce the same token.\n- Emits the maximal runs of [a-z0-9] in order; every other character is a separator.\n- Never emits an empty string; returns [] for \"\", for a non-string argument, and for\n  input with no alphanumeric run.\n- Deterministic and idempotent: tokenize(tokenize(x).join(\" \")) deep-equals tokenize(x).\n- It is the ONLY tokenizer in the project: the indexer and the query path must both\n  call this function, so a document and a query are analysed identically.",
+  "acceptance": "node --test acceptance/text-analyzer.test.mjs",
+  "nl_description": "The analysis half of the search engine: the single function that turns arbitrary text — a document title, a document body, or a user query string — into comparable terms. Keeping exactly one tokenizer is what guarantees index terms and query terms are drawn from the same vocabulary; a second, slightly different tokenizer anywhere in the project is a defect, not an optimisation.",
+  "serves": "ranked-search",
+  "env": "node>=20"
+}

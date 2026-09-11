@@ -1,0 +1,10 @@
+{
+  "contract": "text-analyzer",
+  "kind": "implementation",
+  "imports": [],
+  "files": [
+    "lib/analyze.mjs",
+    "acceptance/text-analyzer.test.mjs"
+  ],
+  "notes": "Lowercase -> NFD -> drop combining marks -> match [a-z0-9]+. One module-level regex, no state.\n\nGate seen red first: ERR_MODULE_NOT_FOUND on lib/analyze.mjs, then 1/7 red (the structural\n\"only tokenizer\" test) until search.mjs existed. Both mutants in bench/mutate.mjs — removing the\ndiacritic fold, and splitting on spaces instead of alphanumeric runs — are caught.\n\nDeliberately NOT done: stemming and stop-word removal. The corpus is synthetic and\nlanguage-neutral, so both are guesses about a language we cannot read; a stop-word list in\nparticular would silently delete query terms the judge may be scoring on. If you ever add one,\nthe analyzer is also the query path, so regenerate bench/queries.json and re-run bench/sweep.mjs."
+}

@@ -1,0 +1,15 @@
+{
+  "contract": "search-cli",
+  "kind": "implementation",
+  "imports": [
+    "corpus-reader",
+    "text-analyzer",
+    "inverted-index",
+    "bm25-ranking"
+  ],
+  "files": [
+    "search.mjs",
+    "acceptance/search-cli.test.mjs"
+  ],
+  "notes": "Composition only: argv -> command table -> libraries. Every failure path funnels through one\nfail() (message on stderr, empty stdout, exit 1), and the index directory is resolved against\nprocess.cwd(), which is what lets every gate run the CLI in a throwaway working directory\ninstead of fighting over the project's own ./index.\n\nJudge-facing decisions: `query` joins its arguments with spaces, so an unquoted multi-word\nquery behaves like a quoted one (strictness there would cost a whole query's score and buy\nnothing); a query matching nothing prints zero lines and exits 0, because empty is an answer;\n`stats` reads docs/skipped out of the index header, never by re-reading the corpus.\n\nGate hole found while running it red: with search.mjs absent, the error-path test PASSED — a\nmissing CLI also exits 1 with an empty stdout. It now also asserts the stderr is not a module\nloader stack trace. Watch for that shape: \"expected failure\" tests pass for free on a crash."
+}

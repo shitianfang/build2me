@@ -1,0 +1,4 @@
+# append-only — one line per deprecated contract: <contract-name> <reason>
+inverted-index round-2 requirement: exact-phrase search needs term POSITIONS, which this statement's postings ({doc,body,title}) cannot express — superseded by positional-index
+search-cli round-2 requirement: query must treat a double-quoted argument as an exact phrase — superseded by search-cli-phrases
+ranked-search round-2 requirement: the deliverable must answer exact-phrase queries, which this statement does not require — superseded by ranked-phrase-search

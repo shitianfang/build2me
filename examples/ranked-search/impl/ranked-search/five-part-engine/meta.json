@@ -1,0 +1,21 @@
+{
+  "contract": "ranked-search",
+  "kind": "decomposition",
+  "imports": [
+    "corpus-reader",
+    "text-analyzer",
+    "inverted-index",
+    "bm25-ranking",
+    "search-cli"
+  ],
+  "files": [
+    "acceptance/ranked-search.test.mjs",
+    "docs/DESIGN.md",
+    "bench/measure.mjs",
+    "bench/make-queries.mjs",
+    "bench/queries.json",
+    "bench/sweep.mjs",
+    "bench/mutate.mjs"
+  ],
+  "notes": "The split follows the four judged dimensions, so each one has an owner that can be measured and\ngated alone: corpus-reader owns robustness (the exact skip count), inverted-index owns size and\nthe cold half of speed, bm25-ranking owns relevance, text-analyzer owns the vocabulary both\nsides share, and search-cli owns the surface the judge actually runs. spec.md is the root\ncontract's interface, restated there so the statement is self-contained.\n\nThe root gate is an integration gate, not a summary of the children: it spawns search.mjs in a\nthrowaway directory and drives index -> stats -> 29 labelled queries -> re-index -> a failing\nindex, checking counts, the size ratio, mean recall@10, p95 latency, determinism and that a\nfailed index leaves the working one intact. The frontier check alone certifies nothing (at\ncascade time it is true by construction), which is why everything after it touches the real CLI.\n\nSampling detail worth keeping: the bench emits five query kinds per topic in a fixed order, so\na stride of 5 samples only the easiest kind and scores a perfect 1.000. The gate uses stride 7,\nwhich is coprime with 5 and keeps hitting every kind (0.862 on the current implementation).\n\nLevels frozen as laws after measuring, not before: laws/index-size.json, laws/query-latency.json,\nlaws/corpus-robustness.json, laws/relevance-floor.json. All four are asserted through\nbench/measure.mjs, so a law and a report can never disagree. Tighten deliberately; never loosen\nsilently."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "index-size",
+  "dimension": "size",
+  "statement": "The index built from sample-docs.jsonl stays at or below 0.26 of the corpus bytes (measured level: 0.2548, 23 403 bytes). History of this floor, the only one this project has ever moved: 0.32 while postings held frequencies only; raised once to 0.38 when exact-phrase search made every occurrence's POSITION mandatory (held 0.3727); now tightened to 0.26 — below the pre-positions level, positions included — by paying in BITS instead of bytes. Binary interpolative coding took the postings from 27 240 to 18 856 bytes (4% off the information-theoretic bound of ~16 161 for this corpus), and blocked front coding took the term dictionary plus its two offset tables from 5 197 to 3 254 and the document ids from 1 172 to 698. A floor is raised only when a requirement forces it, with the encoding work done FIRST; it is tightened whenever the measured level has moved and held.",
+  "check": "node bench/measure.mjs --only size --assert 'sizeRatio<=0.26'"
+}

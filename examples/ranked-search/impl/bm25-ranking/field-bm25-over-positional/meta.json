@@ -1,0 +1,12 @@
+{
+  "contract": "bm25-ranking",
+  "kind": "implementation",
+  "imports": [
+    "positional-index"
+  ],
+  "files": [
+    "lib/rank.mjs",
+    "acceptance/bm25-ranking.test.mjs"
+  ],
+  "notes": "Re-points impl/bm25-ranking/field-bm25-idf-coverage at positional-index after inverted-index was\ndeprecated: the contract's statement never changed, only the name of the reader interface it scores\nover, so the scoring code and its gate are byte-identical. Read that submission's notes for the\nformula, the tuning and the coverage dead end — they still stand.\n\nPositions cost relevance nothing, and that is measured, not assumed: mean P@10 0.2560 and mean\nrecall@10 0.8533 over bench/queries.json, the same four decimals as before the format change.\nrank() never looks at a posting's positions; it reads body/title, which the reader now derives from\nthem. A phrase query reaches rank() as an ordinary term query over the full corpus, and the phrase\nfilter is applied to the ranked ids afterwards — which is why phrase results keep global idf and the\nordinary ranking's order instead of being re-scored inside a tiny candidate set."
+}

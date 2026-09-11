@@ -1,0 +1,12 @@
+{
+  "contract": "bm25-ranking",
+  "kind": "implementation",
+  "imports": [
+    "inverted-index"
+  ],
+  "files": [
+    "lib/rank.mjs",
+    "acceptance/bm25-ranking.test.mjs"
+  ],
+  "notes": "BM25 (k1 0.9, b 0.6) over the inverted-index reader interface, with two departures, both\nmeasured on bench/queries.json:\n  1. a title occurrence counts as titleWeight=2 body occurrences, and the persisted document\n     length counts title tokens the same way, so the boost is not cancelled by normalisation;\n  2. the score is scaled by (covered idf / coverable idf)^coverage, coverage=1.\n\nDead end worth not repeating: coverage weighted by the COUNT of matched terms\n((matched/known)^2.5) sank the bench \"noisy\" kind from 1.00 to 0.78 recall@10 — a query of one\nsignature term plus two corpus-wide common words demoted the documents it was about. Weighting\ncoverage by idf mass repairs it at every exponent tried (0 to 8), because missing a term nobody\ndiscriminates on then costs almost nothing. `coverable` sums only terms the index has seen, so\nan unknown query term cannot punish every document equally.\n\nPARAMS is exported and rank() takes an override argument purely so bench/sweep.mjs can explore\nthe grid against this exact code — a tuner that reimplements the formula tunes something else.\nThe grid is flat: k1 0.6-2.0, b 0.2-0.9, titleWeight 1-8 all move mean recall@10 by under one\npoint on this corpus. Do not read a 0.3% bench win as a real one.\n\nThis gate was the one that was NOT real at first: it passed on a scorer with idf removed and on\na scorer with the coverage factor removed, because its assertions were satisfiable by the raw\nBM25 sum alone. bench/mutate.mjs found both. The two scenarios were rebuilt to be decided by\nthe mechanism under test (df 24 vs df 2 for coverage; two partial matches where only idf can\nbreak the tie, with the rare-term document deliberately losing the alphabetical tie-break)."
+}

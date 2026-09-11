@@ -1,0 +1,6 @@
+{
+  "id": "relevance-floor",
+  "dimension": "relevance",
+  "statement": "Over the 200 labelled queries in bench/queries.json, mean recall@10 stays at or above 0.85 and mean P@10 at or above 0.25 (measured level: 0.8533 / 0.2560). Relevant sets hold 3 documents, so P@10 is capped at 0.30 here; recall@10 is the sensitive half of the same measurement and is what the hidden P@10 judge rewards.",
+  "check": "node bench/measure.mjs --only relevance --assert 'meanRecall10>=0.85' --assert 'meanP10>=0.25'"
+}

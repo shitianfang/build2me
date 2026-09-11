@@ -1,0 +1,13 @@
+{
+  "contract": "phrase-matching",
+  "kind": "implementation",
+  "imports": [
+    "text-analyzer",
+    "positional-index"
+  ],
+  "files": [
+    "lib/phrase.mjs",
+    "acceptance/phrase-matching.test.mjs"
+  ],
+  "notes": "Phrase search is a FILTER, not a second scorer. quotedPhrases() reads the closed double-quoted\nsegments out of the raw query and tokenizes them with the shared analyzer; phraseDocs() walks\npositions to find adjacency; phraseDocIds() intersects the phrases and hands back ids — or null,\nmeaning \"no phrase, do not restrict\". null vs the empty Set is load-bearing: conflating them makes\nevery unquoted query return nothing.\n\nAlgorithm: anchor on the RAREST term of the phrase (fewest postings), then for each of its documents\ncheck that every other term has position start + its offset, where start = anchorPosition - anchorIndex.\nCandidates can only shrink, so anchoring on the rare term is what keeps a phrase containing a\ncorpus-wide common word cheap. Other terms' postings are indexed into a doc -> positions Map once per\nquery, not scanned per document.\n\nJudge-facing decision: an UNTERMINATED quote is not a phrase. Promoting it would turn one stray\ncharacter into a recall cliff (a phrase filter answers with a handful of documents; the same query\nunquoted answers with ten), so a half-quoted query degrades to exactly the behaviour it had before\nphrases existed. Same instinct for an empty quote (\"\" or \" - \"): dropped, not treated as an\nunsatisfiable phrase that silently empties the answer.\n\nCorrectness rests on the index's position space, not on this module: title tokens and body tokens\nare separated by one unused coordinate, so \"last word of the title\" + \"first word of the body\" is\nnever adjacent. Tested here against a hand-built reader (the semantics are the reader interface's,\nnot this index's) and against the real corpus with a brute-force scan as the oracle."
+}

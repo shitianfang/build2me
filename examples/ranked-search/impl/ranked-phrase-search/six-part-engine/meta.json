@@ -1,0 +1,23 @@
+{
+  "contract": "ranked-phrase-search",
+  "kind": "decomposition",
+  "imports": [
+    "corpus-reader",
+    "text-analyzer",
+    "positional-index",
+    "phrase-matching",
+    "bm25-ranking",
+    "search-cli-phrases"
+  ],
+  "files": [
+    "acceptance/ranked-phrase-search.test.mjs",
+    "acceptance/ranked-search.test.mjs",
+    "docs/DESIGN.md",
+    "bench/measure.mjs",
+    "bench/make-queries.mjs",
+    "bench/queries.json",
+    "bench/sweep.mjs",
+    "bench/mutate.mjs"
+  ],
+  "notes": "Round 2. The requirement changed (exact-phrase queries), so three contracts were deprecated and\nsuperseded rather than edited: inverted-index -> positional-index (frequencies cannot express\nadjacency), search-cli -> search-cli-phrases (quoting is new surface), ranked-search ->\nranked-phrase-search (the deliverable itself). corpus-reader and text-analyzer were untouched — the\ntokenizer is exactly what a phrase is tokenized with — and bm25-ranking kept its statement and was\nonly re-pointed at the new index contract, which is the protocol's reverse cascade repair.\n\nphrase-matching is the one genuinely new child: it owns adjacency, nothing else. Keeping it out of\nbm25-ranking is what let relevance stay bit-identical (0.2560 / 0.8533) across a format change.\n\nEvery successor gate runs its predecessor's gate as well as its own. That is the regression rule made\nstructural: \"nothing that worked may break\" is not a promise in a note, it is the deprecated\ncontract's own assertions still running inside the successor's acceptance command.\n\nDimensions after the change (node bench/measure.mjs):\n  relevance   meanP10 0.2560, meanRecall10 0.8533   unchanged to four decimals\n  phrase      precision 1.0, recall 1.0 over 539 labelled queries (333 of them deliberately empty)\n  size        0.3727 (was 0.3148) — the one dimension positions cost; laws/index-size.json raised\n              0.32 -> 0.38 deliberately, with the encoding work done first (naive: 0.4725)\n  speed       p95 ~90 ms, half of the sample now phrase queries (the position-decoding path)\n  robustness  120 / 5 / exit 0, unchanged\nThe phrase ground truth in bench/queries.json is a brute-force adjacency scan that knows nothing\nabout the index, and a third of the labelled sets are empty on purpose: a filter that never filters\nscores perfectly on matching phrases alone."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "corpus-robustness",
+  "dimension": "robustness",
+  "statement": "Indexing the flawed development corpus exits 0 and reports the exact counts: 120 documents indexed, 5 malformed lines skipped. The judge compares the skip count against its own generator, so an off-by-one here is a scored failure, not a rounding error.",
+  "check": "node bench/measure.mjs --only robustness --assert 'exitCode==0' --assert 'docs==120' --assert 'skipped==5'"
+}

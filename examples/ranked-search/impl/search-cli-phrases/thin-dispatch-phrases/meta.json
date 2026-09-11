@@ -1,0 +1,17 @@
+{
+  "contract": "search-cli-phrases",
+  "kind": "implementation",
+  "imports": [
+    "corpus-reader",
+    "text-analyzer",
+    "positional-index",
+    "phrase-matching",
+    "bm25-ranking"
+  ],
+  "files": [
+    "search.mjs",
+    "acceptance/search-cli-phrases.test.mjs",
+    "acceptance/search-cli.test.mjs"
+  ],
+  "notes": "Supersedes impl/search-cli/thin-dispatch. The whole change is three lines inside query(): ask\nphrase-matching for the ids a quoted segment allows (null when there is no phrase), rank as before,\nfilter, slice to ten. index and stats are untouched, and so is every error path.\n\nWhy filter AFTER ranking instead of ranking a restricted reader: idf is global that way. Restricting\nthe reader first would compute idf inside the candidate set, where a corpus-wide common word looks\nrare, and would silently re-order the phrase results. The cost is asking rank() for docCount ids\ninstead of ten, which is free — rank sorts its whole hit set either way.\n\nThe gate runs the deprecated search-cli gate alongside the new one, so the old surface is enforced by\nthe assertions that always enforced it: ten ids one per line, stats' three keys, stderr + exit 1 +\nempty stdout on every error, ./index resolved against cwd, and the composition-layer check (now\nextended with lib/phrase.mjs, and with a check that no matching logic leaked into the CLI)."
+}

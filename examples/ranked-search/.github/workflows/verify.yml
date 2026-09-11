@@ -1,0 +1,21 @@
+name: verify
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: contract immutability
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            bash tools/check-immutability.sh "origin/${{ github.base_ref }}"
+          else
+            bash tools/check-immutability.sh "HEAD~1"
+          fi
+      - name: verify
+        run: node tools/verify.mjs

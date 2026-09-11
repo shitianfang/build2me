@@ -1,0 +1,9 @@
+{
+  "name": "bm25-ranking",
+  "title": "bm25-ranking: score documents against all query terms, rare terms weighted more",
+  "interface": "Module `lib/rank.mjs`.\n\n```stub\nexport function rank(reader: object, queryTerms: string[], limit: number): string[];\n```\n\n- `reader` is any object implementing the inverted-index reader interface\n  (docCount, avgDocLen, docId(i), docLen(i), postings(term)); rank must not touch\n  the filesystem itself, so it can be exercised against a hand-built reader.\n- Scores with BM25 (idf = ln(1 + (N - df + 0.5) / (df + 0.5))), so a rare term\n  contributes more than a common one, with saturating term frequency and document\n  length normalisation, and a title occurrence weighted above a body occurrence.\n- Ranks by how well a document matches ALL query terms: covering more of the query's\n  known terms dominates scoring higher on a subset of them.\n- Returns at most `limit` document ids, best first, only documents whose score is\n  above zero, each id at most once. Ties break deterministically by ascending id.\n- Query terms absent from the index contribute nothing and do not disqualify anyone;\n  an empty term list returns [].",
+  "acceptance": "node --test acceptance/bm25-ranking.test.mjs",
+  "nl_description": "The relevance half of the search engine: the scoring function that decides which ten documents come back and in what order, judged as mean P@10 over hidden labelled queries. It is a pure function over a reader interface — no files, no CLI — so its behaviour (rare terms outrank common ones, full query coverage outranks partial, titles outrank bodies, shorter documents outrank padded ones) is tested directly instead of inferred from end-to-end output.",
+  "serves": "ranked-search",
+  "env": "node>=20"
+}

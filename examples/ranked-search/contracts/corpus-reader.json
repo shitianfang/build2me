@@ -1,0 +1,9 @@
+{
+  "name": "corpus-reader",
+  "title": "corpus-reader: parse a flawed JSONL corpus into documents plus an exact skipped count",
+  "interface": "Module `lib/corpus.mjs`.\n\n```stub\nexport function readCorpus(file: string): { docs: Array<{ id: string, title: string, body: string }>, skipped: number };\n```\n\nSemantics:\n- The file is read incrementally (chunked), never assuming it fits comfortably in memory,\n  and split on \"\\n\"; a trailing \"\\r\" is stripped so CRLF files parse identically.\n- A corpus line is any line that is not empty after trimming. Blank / whitespace-only\n  lines are file whitespace, not corpus lines: they are neither documents nor skips.\n- A corpus line yields a document iff it parses as JSON AND is a non-array object AND\n  has `id`, `title` and `body` all of type string. Every other corpus line increments\n  `skipped` and is otherwise ignored — reading never throws on malformed content.\n- `docs` preserves file order. Extra JSON fields are ignored, not copied.\n- Reading a path that does not exist or cannot be opened throws an Error whose message\n  contains the path. That is the only failure mode.",
+  "acceptance": "node --test acceptance/corpus-reader.test.mjs",
+  "nl_description": "Robust JSONL ingestion: turns a corpus file whose lines may be truncated JSON, non-objects, or missing fields into the list of usable documents and the exact number of lines that were thrown away. This is the robustness dimension of the search CLI — indexing must survive garbage and report the skip count precisely, because the judge compares that number. Reusable by anything that needs to read the {id,title,body} JSONL format.",
+  "serves": "ranked-search",
+  "env": "node>=20"
+}

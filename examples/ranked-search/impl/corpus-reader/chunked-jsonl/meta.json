@@ -1,0 +1,10 @@
+{
+  "contract": "corpus-reader",
+  "kind": "implementation",
+  "imports": [],
+  "files": [
+    "lib/corpus.mjs",
+    "acceptance/corpus-reader.test.mjs"
+  ],
+  "notes": "Chunked readSync + StringDecoder rather than readFileSync: the corpus is the one input whose\nsize we do not control, and a multi-byte character straddling a chunk boundary must not corrupt\na line. Only an unopenable path throws; malformed CONTENT is data and is what `skipped` counts.\n\nThe judged number is `skipped`, so the line taxonomy is the whole contract:\n  counted  — invalid JSON, valid JSON that is not an object (array, number, string, null),\n             an object missing id/title/body, or one where any of the three is not a string\n  ignored  — blank and whitespace-only lines, including the empty string after a trailing\n             newline. A file terminator is not a malformed document. sample-docs.jsonl has 125\n             non-blank lines: 120 documents + 5 flaws (3 truncated JSON, 2 objects with only\n             an id), and the gate pins exactly that.\nIf a future judged corpus turns out to count blank lines as skips, that is a contract change:\ndeprecate and supersede, do not quietly flip the rule.\n\nGate seen red first (ERR_MODULE_NOT_FOUND), and both mutants are caught: counting blank lines\nas skips goes red on 6 assertions, accepting documents missing title/body on 2."
+}

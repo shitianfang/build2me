@@ -1,0 +1,23 @@
+{
+  "contract": "ranked-phrase-search",
+  "kind": "decomposition",
+  "imports": [
+    "corpus-reader",
+    "text-analyzer",
+    "positional-index",
+    "phrase-matching",
+    "bm25-ranking",
+    "search-cli-phrases"
+  ],
+  "files": [
+    "acceptance/ranked-phrase-search.test.mjs",
+    "acceptance/ranked-search.test.mjs",
+    "docs/DESIGN.md",
+    "bench/measure.mjs",
+    "bench/make-queries.mjs",
+    "bench/queries.json",
+    "bench/sweep.mjs",
+    "bench/mutate.mjs"
+  ],
+  "notes": "Round 3. No statement changed and nothing was deprecated: the requirement is the same one round 2\nleft, and this is the same decomposition re-pointed at better implementations of two children\n(impl/positional-index/bit-interpolative, impl/search-cli-phrases/lazy-dispatch-phrases). Two\ndimensions moved, three were held bit-identical, and both moves are now laws.\n\n  size        0.3727 -> 0.2548   (-31.6%: 34 224 -> 23 403 bytes)   laws/index-size.json 0.38 -> 0.26\n  speed       startupRatio 1.28-1.45 -> 1.19-1.26                   laws/query-latency.json + ratio floor\n  relevance   meanP10 0.2560, meanRecall10 0.8533                   unchanged to four decimals\n  phrase      precision 1.0, recall 1.0 over 539 queries            unchanged\n  robustness  120 indexed, 5 skipped, exit 0                        unchanged\n\nThe relevance and phrase numbers being identical is the point of the round, not a coincidence: the\nencoding is lossless and the CLI change is about which modules get parsed, so neither can move an\nanswer. It was checked as well as argued — 30 sampled queries, old binary and new binary, byte-identical\nstdout.\n\nWhat bench/measure.mjs gained: every timed query is now run beside an empty `node -e 0` in the same\nminute, and the report carries bareNodeMs, overheadMs and startupRatio alongside p50/p95. On a shared\nmachine p95 in milliseconds is mostly a measurement of the neighbours — it swung 85-227 ms here\nwithout any code changing — so a floor on it can only ever be loose. The ratio of the fastest query to\nthe fastest empty process is invariant under that noise, and is what the speed law now tightens; p95\nstays as an absolute backstop. That is the round's structural lesson: when a floor cannot be tightened\nbecause the measurement is noisy, fix the measurement, not the floor.\n\nDead end recorded for the next agent: three encodings were measured against BIC before it was chosen\n(per-list fixed bit width 23 301, blocks of 32 23 193, Elias gamma 28 388 — the last WORSE than the\nvarints it replaced). Size is now within ~17% of the information-theoretic bound for this corpus;\nbeating it further needs context modelling, which would cost the per-term random access that keeps a\nquery paying only for the terms it names."
+}
