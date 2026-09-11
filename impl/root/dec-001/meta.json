@@ -1,0 +1,7 @@
+{
+  "contract": "root",
+  "kind": "decomposition",
+  "imports": ["protocol-spec", "verifier", "frontier-tool", "immutability-check", "example-flow", "typed-stub-semantics", "deprecation-cascade", "agent-server", "slow-loop-instruments"],
+  "files": ["PROTOCOL.md"],
+  "notes": "The system reduced to its parts. SKETCH_ACCEPTED until every child is Done; root then auto-resolves via its own acceptance gate."
+}

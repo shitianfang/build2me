@@ -1,0 +1,9 @@
+{
+  "name": "immutability-check",
+  "title": "Contract immutability enforcement",
+  "interface": "CLI: bash tools/check-immutability.sh [<baseline-ref>]. Fails if any file under contracts/ was modified or deleted relative to the baseline (additions only), or if laws/deprecations.log shrank or was rewritten (append-only). Exits 0 silently when the baseline ref does not exist.",
+  "acceptance": "node --test acceptance/immutability-check.test.mjs",
+  "nl_description": "The git-native form of prove2me's statement immutability: once published, a contract can never be edited, so partial work composes and no merge arbitration is needed.",
+  "serves": "root",
+  "env": "git, bash"
+}

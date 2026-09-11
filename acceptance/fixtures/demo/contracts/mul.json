@@ -1,0 +1,9 @@
+{
+  "name": "mul",
+  "title": "Multiplication",
+  "interface": "mul(a: number, b: number): number",
+  "acceptance": "node --test test/mul.test.mjs",
+  "nl_description": "Leaf contract, intentionally left Open in the committed fixture; the example-flow acceptance test implements it and watches calc close by cascade.",
+  "serves": "calc",
+  "env": "node>=20"
+}

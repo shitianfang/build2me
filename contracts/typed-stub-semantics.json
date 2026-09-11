@@ -1,0 +1,9 @@
+{
+  "name": "typed-stub-semantics",
+  "title": "Compile-against-stub semantics for typed languages",
+  "interface": "A specification (and a worked TypeScript or Rust example) of how a contract's interface is materialized as a compilable stub, so an implementation of a parent type-checks against child contracts before any child is implemented — the analogue of proving against sorry-stubbed statements.",
+  "acceptance": "node --test acceptance/typed-stub-semantics.test.mjs",
+  "nl_description": "OPEN. In v0.1 acceptance tests are the only gate; typed stubs would add a compile-time gate and make decomposition cheaper to validate. Includes how stubs are generated from the contract interface and pinned per env.",
+  "serves": "root",
+  "env": "node>=20"
+}

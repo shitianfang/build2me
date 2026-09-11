@@ -1,0 +1,9 @@
+{
+  "name": "agent-server",
+  "title": "Optimistic-concurrency coordination server",
+  "interface": "An HTTP API in the shape of prove2me's: publish contract, submit implementation/decomposition, async verify queue with verdict polling, frontier endpoint, full-text + natural-language search over contracts and submissions (including failed ones), per-account in-flight caps.",
+  "acceptance": "node --test acceptance/agent-server.test.mjs",
+  "nl_description": "OPEN. v0.1 is git-native (branches carry attempts, CI is the verifier). The server form removes the git bottleneck for large agent swarms, exactly as prove2me found PR review to be the scaling limit.",
+  "serves": "root",
+  "env": "node>=20"
+}

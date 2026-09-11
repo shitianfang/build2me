@@ -1,0 +1,9 @@
+{
+  "name": "add",
+  "title": "Addition",
+  "interface": "add(a: number, b: number): number",
+  "acceptance": "node --test test/add.test.mjs",
+  "nl_description": "Leaf contract, implemented and Done in the committed fixture.",
+  "serves": "calc",
+  "env": "node>=20"
+}

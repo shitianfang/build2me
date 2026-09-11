@@ -1,0 +1,9 @@
+{
+  "name": "deprecation-cascade",
+  "title": "Deprecation with downstream re-open",
+  "interface": "CLI: node tools/deprecate.mjs <contract> --reason <text> [--dir <project>]. Appends to laws/deprecations.log and reports every dependent contract whose submissions import the deprecated one — the set that verification will now hold Open until re-pointed to a successor contract.",
+  "acceptance": "node --test acceptance/deprecation-cascade.test.mjs",
+  "nl_description": "OPEN. Requirements change is the one thing software has that mathematics does not: statements can become wrong. Contracts are never edited; they are deprecated, and the cascade re-opens dependents.",
+  "serves": "root",
+  "env": "node>=20"
+}

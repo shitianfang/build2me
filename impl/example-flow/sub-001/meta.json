@@ -1,0 +1,1 @@
+{ "contract": "example-flow", "kind": "implementation", "imports": [], "files": ["acceptance/fixtures/demo"], "notes": "" }

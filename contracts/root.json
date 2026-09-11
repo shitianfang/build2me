@@ -1,0 +1,9 @@
+{
+  "name": "root",
+  "title": "build2me: a prove2me-style protocol for building software with parallel agents",
+  "interface": "A protocol (PROTOCOL.md) plus a zero-dependency toolset that lets many agents build one software project concurrently: immutable contract DAG, lock-free optimistic coordination, per-contract machine-checkable acceptance, cascade verification, and a frontier query that tells any agent what to work on next.",
+  "acceptance": "node --test acceptance/root.test.mjs",
+  "nl_description": "The whole system. Done when every child contract is Done and the frontier of this repository is empty.",
+  "serves": null,
+  "env": "node>=20"
+}

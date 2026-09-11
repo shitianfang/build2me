@@ -1,0 +1,1 @@
+{ "contract": "calc", "kind": "decomposition", "imports": ["add", "mul"], "files": ["src/calc.mjs"], "notes": "Sketch: calc implemented against add and mul; SKETCH_ACCEPTED while mul is Open." }

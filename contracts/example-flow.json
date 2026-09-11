@@ -1,0 +1,9 @@
+{
+  "name": "example-flow",
+  "title": "End-to-end cascade demonstration",
+  "interface": "acceptance/fixtures/demo is a complete miniature build2me project (a tiny calculator) with one Done leaf, one Open leaf, and a sketched parent. Its acceptance test copies the fixture, implements the Open leaf, and proves the parent flips to Done by cascade.",
+  "acceptance": "node --test acceptance/example-flow.test.mjs",
+  "nl_description": "Executable documentation: the full life of a contract tree, from SKETCH_ACCEPTED to cascade completion, verified end to end.",
+  "serves": "root",
+  "env": "node>=20"
+}

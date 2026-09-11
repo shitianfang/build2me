@@ -1,0 +1,1 @@
+{ "contract": "immutability-check", "kind": "implementation", "imports": [], "files": ["tools/check-immutability.sh"], "notes": "" }

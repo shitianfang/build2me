@@ -1,0 +1,9 @@
+{
+  "name": "calc",
+  "title": "Tiny calculator CLI",
+  "interface": "calc(expr: string) evaluates 'a+b' and 'a*b' over non-negative integers.",
+  "acceptance": "node --test test/calc.test.mjs",
+  "nl_description": "The demo root: an integration contract over add and mul.",
+  "serves": null,
+  "env": "node>=20"
+}

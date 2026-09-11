@@ -1,0 +1,9 @@
+{
+  "name": "frontier-tool",
+  "title": "Frontier query (the scheduler)",
+  "interface": "CLI: node tools/frontier.mjs [--dir <project>] [--json]. Prints Open leaf contracts ranked by closability: the number of ancestor contracts that would structurally auto-resolve if this leaf were Done.",
+  "acceptance": "node --test acceptance/frontier-tool.test.mjs",
+  "nl_description": "Replaces task assignment. Any agent picks its next work item from this ranking; no locks, no claims. Closability is a structural upper bound (acceptance gates are assumed green in the hypothetical).",
+  "serves": "root",
+  "env": "node>=20"
+}

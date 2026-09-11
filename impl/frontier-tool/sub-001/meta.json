@@ -1,0 +1,1 @@
+{ "contract": "frontier-tool", "kind": "implementation", "imports": [], "files": ["tools/frontier.mjs"], "notes": "" }

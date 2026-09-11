@@ -1,0 +1,9 @@
+{
+  "name": "verifier",
+  "title": "Deterministic verifier",
+  "interface": "CLI: node tools/verify.mjs [--dir <project>] [--json]. Loads contracts and submissions, validates schema and references, rejects cycles and self-imports, runs acceptance gates for submissions whose imports are all Done, derives statuses by fixpoint (cascade), enforces built-in laws, exits non-zero on structural errors or gate failures.",
+  "acceptance": "node --test acceptance/verifier.test.mjs",
+  "nl_description": "The kernel analogue. Status is derived at read time, never stored; trust rests on this program plus the immutability check, not on any agent.",
+  "serves": "root",
+  "env": "node>=20"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "slow-loop-instruments",
+  "title": "Slow-loop instruments: co-change misalignment and cold-agent drills",
+  "interface": "Two tools. (1) misalignment report: mine git co-change history, compare the impact scope implied by the contract tree against the scope revealed by actual co-changes, and emit refactoring suggestions where they repeatedly disagree. (2) cold-agent drill runner: standardized comprehension/bug-localization tasks executed by a context-free agent against the repo, with counted files-read/turns as the codebase-quality trend metric.",
+  "acceptance": "node --test acceptance/slow-loop-instruments.test.mjs",
+  "nl_description": "OPEN. The feedback that cannot be instant: ground truth about whether the decomposition matches reality. Wins get frozen into laws; misalignment reopens design nodes.",
+  "serves": "root",
+  "env": "node>=20"
+}

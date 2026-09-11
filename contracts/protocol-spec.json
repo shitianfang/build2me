@@ -1,0 +1,9 @@
+{
+  "name": "protocol-spec",
+  "title": "The written protocol",
+  "interface": "PROTOCOL.md defines all objects (laws, contracts, submissions), verdicts, status derivation, the cascade rule, decomposition, coordination rules, frontier/closability, deprecation, and the human role.",
+  "acceptance": "node --test acceptance/protocol-spec.test.mjs",
+  "nl_description": "The agent-facing specification, playing the role of prove2me's SKILL.md: an agent that has read only PROTOCOL.md can participate correctly.",
+  "serves": "root",
+  "env": "node>=20"
+}
