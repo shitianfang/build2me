@@ -1,0 +1,9 @@
+{
+  "name": "dag-viz",
+  "title": "Contract DAG export for visualization",
+  "interface": "CLI: node tools/graph.mjs [--dir <project>] [--format mermaid|dot|json] [--structural]. Emits the contract DAG with per-node derived status (done/open/deprecated) and per-edge submission verdicts: json for programmatic use, mermaid and dot for direct rendering. Edges run parent -> import; ACCEPTED edges are solid, sketch edges dashed.",
+  "acceptance": "node --test acceptance/dag-viz.test.mjs",
+  "nl_description": "Makes the DAG visible: what is Done, what is Open, which sketches wait on which children. The json output is the data source for any UI; mermaid/dot render directly in editors, CI summaries, and docs.",
+  "serves": "root",
+  "env": "node>=20"
+}

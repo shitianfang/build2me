@@ -1,0 +1,7 @@
+{
+  "contract": "root",
+  "kind": "decomposition",
+  "imports": ["protocol-spec", "verifier", "frontier-tool", "immutability-check", "example-flow", "dag-viz", "typed-stub-semantics", "deprecation-cascade", "agent-server", "slow-loop-instruments"],
+  "files": ["PROTOCOL.md"],
+  "notes": "Supersedes dec-001 as the live sketch: the system now also comprises dag-viz. dec-001 remains valid history; either decomposition may close root."
+}

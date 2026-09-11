@@ -1,0 +1,1 @@
+{ "contract": "dag-viz", "kind": "implementation", "imports": [], "files": ["tools/graph.mjs"], "notes": "Reuses lib.mjs loading and status derivation; layout is left to the renderer." }
