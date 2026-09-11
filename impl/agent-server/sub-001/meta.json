@@ -1,0 +1,7 @@
+{
+  "contract": "agent-server",
+  "kind": "implementation",
+  "imports": [],
+  "files": ["tools/serve.mjs"],
+  "notes": "v0.1: one zero-dependency node:http file serving ONE project dir; status/verdicts reuse tools/lib.mjs and /api/frontier + /api/graph delegate to the CLI tools so the numbers cannot drift. Async verify queue, auth with per-account in-flight caps, and multi-project routing are named as future work in the file header, not built."
+}
