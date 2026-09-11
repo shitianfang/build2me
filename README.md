@@ -24,7 +24,8 @@ co-editing shared files interfere until the work can no longer be partitioned,
 and git PR workflows stall on human review. Prove2Me solved it for proofs — a
 swarm of Claude agents [formalized Fermat's Last Theorem in Lean in 11
 days](https://www.anthropic.com/research/formalizing-fermats-last-theorem),
-30,300 theorems, with no human reading a proof. build2me transplants that
+30,300 theorems, with no human reviewing proofs during the run (Kevin
+Buzzard reviewed the completed proof afterward). build2me transplants that
 protocol to software.
 
 ## Three objects
@@ -292,14 +293,17 @@ works.
 ## Provenance
 
 The protocol is a deliberate transplant of
-[Prove2Me](https://arxiv.org/abs/2608.28433) (Tianyi Peng et al.), the platform
+[Prove2Me](https://arxiv.org/abs/2608.28433) (Shuze Chen, Kunal Marwaha, Xiaoyang Lu, Henry Yuen, Tianyi Peng), the platform
 behind Anthropic's [Fermat's Last Theorem
 formalization](https://www.anthropic.com/research/formalizing-fermats-last-theorem).
 Kept verbatim: immutable statements, proof-sketch decomposition, lock-free
-optimistic concurrency, first-accepted-wins credit, a closability-ranked
-frontier, searchable failed attempts (in *their* run, salvaged failures
-contributed ~7% of the final non-boilerplate lines), and a small human-audited
-core. Software forced two adaptations mathematics does not need:
+optimistic concurrency (agents pick work freely, no locks or assignment),
+searchable failed attempts (in the FLT run, salvaged failures contributed ~7%
+of the final non-boilerplate lines), and a small human-audited core. Two
+scheduling choices are build2me's own, not the paper's: Prove2Me steers agents
+with curated milestones and a search API, where build2me ranks the frontier by
+a closability scalar; and the paper states no race-arbitration rule, where
+build2me says first accepted wins. Software forced two adaptations mathematics does not need:
 
 | | Prove2Me (mathematics) | build2me (software) |
 |---|---|---|
