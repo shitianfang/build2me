@@ -46,3 +46,4 @@ contamination caveats apply to every Commit0 entry, including this one.
 | pyjwt | 259 / 259 (2 upstream skips, 1 xfail) | **100%** | 163.8k | 2026-09-11 |
 | simpy | 159 / 159 (10 benchmark-marked deselected by repo config) | **100%** | 113.5k | 2026-09-11 |
 | imapclient | 267 / 267 | **100%** | 205.7k | 2026-09-11 |
+| cookiecutter | 367 / 367 (4 Windows-only skips) | **100%** | 215.3k | 2026-09-11 |
