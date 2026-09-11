@@ -1,9 +1,12 @@
 # build2me
 
-**A protocol for building software with swarms of parallel agents.** Work is
-split into immutable contracts, each carrying the command that decides whether
-it is satisfied. Agents pick contracts off a ranked frontier without claiming
-them, a verifier is the only judge, and finished parts compose by cascade.
+**Turn building software into doing mathematics — so a swarm of agents can work
+in parallel without coordinating, and without a human reviewing code.**
+
+Work is split into immutable contracts, each carrying the command that decides
+whether it is satisfied. Agents pick contracts off a ranked frontier without
+claiming them, a verifier is the only judge, and finished parts compose by
+cascade.
 
 [Protocol](PROTOCOL.md) · [Stub semantics](STUBS.md) · [Rendered DAG](docs/DAG.md) · [Race 001](races/001-deprecation-cascade.md) · [中文](README.zh-CN.md)
 
@@ -16,47 +19,30 @@ node tools/init.mjs ../my-system --root my-system   # scaffold your own project
 
 ---
 
-## What this is for
+## Why this exists
 
-Three things matter when agents build something bigger than one session:
+Point a swarm of agents at one codebase and the old ways break in two places:
 
-**1. A map of the solution space.** Which parts are solved — verified, and
-nobody can quietly break them again. Which parts are still open. Which paths
-were tried, failed, and why — kept, so the next agent doesn't pay for the same
-dead end twice. The map is the repository itself: `contracts/` are the nodes,
-verdicts mark the solved regions, failed submissions and deprecations mark the
-explored dead ends, and `node tools/graph.mjs --format json` prints the whole
-map — per-node attempt history, abandonment reasons, and each dimension's
-floor — for any tool to render.
+1. **They collide on files.** Three agents editing the same module is a merge
+   disaster.
+2. **They queue behind review.** A PR needs a human to read it, and that human
+   is the bottleneck — it does not matter how fast the agents are.
 
-**2. Decomposition follows the task — it is never fixed up front.** At the
-start you don't know what the right parts are, or which qualities will need
-optimizing. So you split the task as you understand it today; when building
-teaches you a better split, deprecate and re-split — history stays. Dimensions
-are discovered the same way: a page that got slow, a module nobody can read, a
-doc that lied.
-
-**3. A foothold in every dimension, and ratchets everywhere.** "It works" is
-one dimension; its foothold is the acceptance gate — once green, it may never
-quietly go red again. Every other quality the task turns out to need gets the
-same treatment the moment it bites: measure today's level, freeze it as a law
-(`laws/<id>.json` — a check the verifier runs on every pass), and from then on
-that ground cannot be lost silently. Progress means closing open contracts and
-deliberately tightening floors. Never backwards.
-
-**The honest limit:** a task that fits inside one session's context is cheaper
-done directly in that session. This pays off when the work outlives its
-workers — sessions end; the map remains.
-
-The precedent that this works at scale is
-[Prove2Me](https://arxiv.org/abs/2608.28433): agents co-editing shared files
-interfere, PR workflows stall on human review — so it moved trust from review
-to immutable statements plus a checker, and a swarm of Claude agents
-[formalized Fermat's Last Theorem in Lean in 11
-days](https://www.anthropic.com/research/formalizing-fermats-last-theorem),
+[Prove2Me](https://arxiv.org/abs/2608.28433) hit both of these first. Its
+authors tried multi-agent co-editing (agents interfere) and a git PR workflow
+(review stalls) before inventing anything, and answered by **moving trust from
+review to immutable statements plus a checker**. In Lean that checker is free:
+the compiler says it type-checks, and it is proved. On that footing a swarm of
+Claude agents [formalized Fermat's Last Theorem in 11
+days](https://www.anthropic.com/research/formalizing-fermats-last-theorem) —
 30,300 theorems, with no human reviewing proofs during the run (Kevin Buzzard
-reviewed the completed proof afterward). build2me transplants that protocol to
-software.
+reviewed the completed proof afterward).
+
+build2me asks the obvious follow-up: **in software, what plays the part of the
+compiler?**
+
+The answer it commits to: **every unit of work carries its own acceptance
+command.**
 
 ## Three objects
 
@@ -75,6 +61,14 @@ done:
   "env": "node>=20"
 }
 ```
+
+That one line settles it. There is no "close enough" and no "let me check with
+someone" — the command exits 0 and the contract is Done, or it does not and the
+contract is not.
+
+Contracts are **never edited**; `check-immutability.sh` enforces append-only in
+CI. Changed your mind? Deprecate the statement and publish a successor — and
+the deprecation re-opens everything that depended on it. History stays.
 
 **2. Submission** — an attempt at a contract, in `impl/<contract>/<id>/meta.json`.
 Either an `implementation`, or a `decomposition` that reduces the contract to
@@ -97,14 +91,21 @@ children it `imports`. Those imports are the DAG's edges:
 ```
 
 The verifier runs every law's `check` on every pass and fails verification on
-violation. *A law is only a law if something enforces it; prose without a
-check is advice.* Which dimensions a project needs is discovered while
-building, never fixed in advance — when a quality problem bites, measure
-today's level, set the floor there, and it can never be lost silently again.
-`laws/laws.md` is the human-readable index.
+violation.
 
-Everything else — statuses, verdicts, the work queue, completion — is **derived**
-by the verifier. Nothing is stored, nothing is negotiated.
+> *A law is only a law if something enforces it; prose without a check is
+> advice.*
+
+Laws are written when a problem bites, not in advance: measure today's level,
+freeze it as the floor, and from then on that ground cannot be lost silently.
+That is a **ratchet** — what went green may never quietly go red. Which
+dimensions a project needs is discovered while building. `laws/laws.md` is the
+human-readable index.
+
+---
+
+Everything else — statuses, verdicts, the work queue, completion — is
+**derived** by the verifier. Nothing is stored, nothing is negotiated.
 
 | term | meaning |
 |---|---|
@@ -115,7 +116,40 @@ by the verifier. Nothing is stored, nothing is negotiated.
 | **cascade** | when a sketch's last child closes, the *parent's* gate runs for real |
 | **closability** | how many ancestors would auto-resolve if this leaf closed — the scheduler's only number |
 
-## Architecture
+## How it runs
+
+The kernel is two tools:
+
+- **`verify.mjs`** reads the project state, runs each contract's own acceptance
+  command, and derives every status by fixpoint.
+- **`frontier.mjs`** prints the Open contracts ranked by closability. That
+  ranking is the work queue.
+
+**The kernel decides admissibility, not quality.** A contract is Done exactly
+when its gate passed. That is a binary, and binaries are blind to everything a
+gate does not test. When several submissions pass the same gate, a second,
+*optional* layer ranks them: blind pairwise review against a rubric written
+before the solutions existed. Race 001 below is the receipt for why that layer
+is in the diagram.
+
+**Agents are interchangeable.** They read the frontier, do work, submit. So:
+
+- nothing is reserved, so an agent never waits;
+- a crashed agent blocks nobody;
+- two agents on one contract is a **cost, never a conflict** — contracts are
+  immutable, so anything ever built against one stays valid and there is
+  nothing to arbitrate at merge time;
+- the race rule is simply **first accepted wins**.
+
+**The loop every agent runs:**
+
+```sh
+node tools/frontier.mjs          # 1. pick an Open contract, prefer high closability
+                                 # 2. search existing contracts and submissions — reuse beats rebuilding
+                                 # 3. implement it, or decompose it into new child contracts
+node tools/verify.mjs            # 4. run the kernel locally until green
+                                 # 5. submit — branch + PR; CI runs this same kernel
+```
 
 ```mermaid
 flowchart TB
@@ -147,29 +181,35 @@ flowchart TB
   S -->|"which one to keep"| ST
 ```
 
-**The kernel decides admissibility, not quality.** It reads the project state,
-runs each contract's own acceptance command, and derives every status by
-fixpoint — a contract is Done exactly when its gate passed. That is a binary,
-and binaries are blind to everything a gate does not test. When several
-submissions pass the same gate, a second, *optional* layer ranks them: blind
-pairwise review against a rubric written before the solutions existed. Race 001
-below is the receipt for why that layer is in the diagram.
+## What this is for
 
-**Agents are interchangeable.** They read the frontier, do work, submit. Nothing
-is reserved, so an agent never waits and a crashed agent blocks nobody. Two
-agents on one contract is a cost, never a conflict — because contracts are
-immutable, anything ever built against one stays valid, so there is nothing to
-arbitrate at merge time.
+Three things matter when agents build something bigger than one session:
 
-**The loop every agent runs:**
+**1. A map of the solution space.** Which parts are solved — verified, and
+nobody can quietly break them again. Which parts are still open. Which paths
+were tried, failed, and why — kept, so the next agent doesn't pay for the same
+dead end twice. The map is the repository itself: `contracts/` are the nodes,
+verdicts mark the solved regions, failed submissions and deprecations mark the
+explored dead ends, and `node tools/graph.mjs --format json` prints the whole
+map — per-node attempt history, abandonment reasons, and each dimension's
+floor — for any tool to render.
 
-```sh
-node tools/frontier.mjs          # 1. pick an Open contract, prefer high closability
-                                 # 2. search existing contracts and submissions — reuse beats rebuilding
-                                 # 3. implement it, or decompose it into new child contracts
-node tools/verify.mjs            # 4. run the kernel locally until green
-                                 # 5. submit — branch + PR; CI runs this same kernel
-```
+**2. Decomposition follows the task — it is never fixed up front.** At the
+start you don't know what the right parts are, or which qualities will need
+optimizing. So you split the task as you understand it today; when building
+teaches you a better split, deprecate and re-split — history stays. Dimensions
+are discovered the same way: a page that got slow, a module nobody can read, a
+doc that lied.
+
+**3. A foothold in every dimension, and ratchets everywhere.** "It works" is
+one dimension; its foothold is the acceptance gate. Every other quality the
+task turns out to need gets the same treatment the moment it bites. Progress
+means closing open contracts and deliberately tightening floors. Never
+backwards.
+
+**The honest limit:** a task that fits inside one session's context is cheaper
+done directly in that session. This pays off when the work outlives its
+workers — sessions end; the map remains.
 
 ## Start your own project
 
@@ -249,6 +289,99 @@ races/        parallel-attempt records: pre-registered rubrics and verdicts
 drills/       cold-agent drill definitions and their append-only results
 ```
 
+## This repository is self-hosting — and closed its own root
+
+build2me was built under its own protocol, by a swarm. The system is the `root`
+contract, decomposed into eleven children; the moment the last one closed,
+root's own integration gate ran by cascade and accepted. `declared-laws` — the
+third object, made machine-checked — was published afterwards and closed the
+same way. Today **all thirteen contracts are Done** (`node tools/verify.mjs`
+reports 13 done / 0 open) and the frontier is empty.
+
+What the root-closing run actually cost, from the harness logs: **seven Opus
+agent sessions** — three racing one contract, one judging them blind, three
+closing frontier contracts in parallel — totalling about **62 minutes of agent
+wall-clock** (far less elapsed, since they ran concurrently) and **~683k
+subagent tokens**, plus the captain session that published contracts, audited
+gates, and merged. Twelve contracts, twelve gates, one contract implemented
+three times.
+
+Two events are preserved because they are the protocol working.
+
+### Race 001 — why passing the gate is not the same as being right
+
+[Full record here.](races/001-deprecation-cascade.md) Three isolated agents
+raced `deprecation-cascade` against a gate published before any of them started.
+
+**All three passed.**
+
+A blind pairwise rubric review, *pre-registered before any solution existed*,
+then found a real defect in two of them: a legal contract name containing
+whitespace made them print success while writing a log line the engine reads
+back as a different name — silently voiding the deprecation and **bypassing the
+deprecate-once invariant the gate itself tests**. The one solution that guarded
+it won and was merged; the captain reproduced the defect before accepting the
+verdict. Losing attempts are preserved on the
+[`attempts/deprecation-cascade`](https://github.com/shitianfang/build2me/tree/attempts/deprecation-cascade)
+branch.
+
+The lesson is the limit stated above, with a receipt attached:
+
+> **The kernel judges admissibility, not quality.** Gates are binary, and a
+> binary is blind to everything it does not test.
+
+### The self-reference lesson
+
+Root's completion gate originally queried the accurate frontier, which
+re-enters the completion gate itself. A completion criterion must be
+structural; the verifier calling it has already supplied the accurate half.
+Recorded in [acceptance/root.test.mjs](acceptance/root.test.mjs).
+
+Both produced the same rule, now in the protocol:
+
+> **Run a gate red for the right reasons before publishing it.**
+> A statement nobody can satisfy is a defect of the statement.
+
+`project-init`'s own gate caught itself passing while its tool did not exist,
+because a crash message happened to match an assertion.
+
+## A measured example
+
+`examples/ranked-search/` is a ranked full-text search CLI built in three
+rounds, each round by a fresh agent with no memory of the last, entirely
+under the protocol: build, then a mid-task requirement change (exact-phrase
+queries — three contracts deprecated and superseded, dependents re-pointed),
+then an optimization round. A hidden pre-registered judge scored every
+round; the same task was run in parallel by plain agent sessions with no
+protocol, same model, same prompts.
+
+| round | quality (P@10 term / phrase) | index size | p95 |
+|---|---|---|---|
+| build | 0.83 / — | 0.2525 | 101 ms |
+| phrases added | 0.83 / 0.78 (max .80) | 0.3036 | 109 ms |
+| optimize | 0.83 / 0.78 | **0.2136** | 98 ms |
+
+Held ground stayed held (no metric regressed in any round), the floors
+moved with receipts (index-size law 0.32 → 0.38 when positions were paid
+for, → 0.26 after interpolative coding), and the whole run cost 1.15x the
+tokens of the plain arm — full numbers, **including where the plain arm was
+better**, in [bench/002-ranked-search/results.md](bench/002-ranked-search/results.md).
+
+## What humans still do
+
+Three jobs, and no others:
+
+1. **Audit top-level contracts for faithfulness** — is this statement really what
+   we want built? Prove2Me's blind read-back applies: have an agent restate the
+   contract without seeing the original intent, and compare.
+2. **Amend laws** — the deliberate, versioned encoding of taste.
+3. **Arbitrate trade-offs** between dimensions when gates cannot decide.
+
+Humans do not review implementations for correctness; the gate decides that. In
+the git-native v0.1 flow a human still presses merge unless you enable
+auto-merge on green — what is removed is reading the diff to decide whether it
+works.
+
 ## Security
 
 **The verifier executes each contract's `acceptance` string as a shell command.**
@@ -293,94 +426,24 @@ means:
   implementations — worth it there, because the discarded ones surfaced a defect
   and a gate erratum, but that is a choice per contract, not a free lunch.
 
-## A measured example
-
-`examples/ranked-search/` is a ranked full-text search CLI built in three
-rounds, each round by a fresh agent with no memory of the last, entirely
-under the protocol: build, then a mid-task requirement change (exact-phrase
-queries — three contracts deprecated and superseded, dependents re-pointed),
-then an optimization round. A hidden pre-registered judge scored every
-round; the same task was run in parallel by plain agent sessions with no
-protocol, same model, same prompts.
-
-| round | quality (P@10 term / phrase) | index size | p95 |
-|---|---|---|---|
-| build | 0.83 / — | 0.2525 | 101 ms |
-| phrases added | 0.83 / 0.78 (max .80) | 0.3036 | 109 ms |
-| optimize | 0.83 / 0.78 | **0.2136** | 98 ms |
-
-Held ground stayed held (no metric regressed in any round), the floors
-moved with receipts (index-size law 0.32 → 0.38 when positions were paid
-for, → 0.26 after interpolative coding), and the whole run cost 1.15x the
-tokens of the plain arm — full numbers, including where the plain arm was
-better, in [bench/002-ranked-search/results.md](bench/002-ranked-search/results.md).
-
-## This repository is self-hosting — and closed its own root
-
-build2me was built under its own protocol, by a swarm. The system is the `root`
-contract, decomposed into eleven children; **all twelve contracts are Done**
-(`node tools/verify.mjs` reports 12 done / 0 open), and the moment the last child
-closed, root's own integration gate ran by cascade and accepted.
-
-What that run actually cost, from the harness logs: **seven Opus agent sessions**
-— three racing one contract, one judging them blind, three closing frontier
-contracts in parallel — totalling about **62 minutes of agent wall-clock** (far
-less elapsed, since they ran concurrently) and **~683k subagent tokens**, plus the
-captain session that published contracts, audited gates, and merged. Twelve
-contracts, twelve gates, one contract implemented three times.
-
-Two events are preserved because they are the protocol working:
-
-- **Race 001** ([full record](races/001-deprecation-cascade.md)) — three isolated
-  agents raced `deprecation-cascade` against a gate published before any of them
-  started. All three passed. A blind pairwise rubric review, *pre-registered
-  before any solution existed*, then found a real defect in two of them: a legal
-  contract name containing whitespace made them print success while writing a log
-  line the engine reads back as a different name — silently voiding the
-  deprecation and bypassing the deprecate-once invariant the gate itself tests.
-  The one solution that guarded it won and was merged; the captain reproduced the
-  defect before accepting the verdict. Losing attempts are preserved on the
-  [`attempts/deprecation-cascade`](https://github.com/shitianfang/build2me/tree/attempts/deprecation-cascade)
-  branch.
-- **The self-reference lesson** — root's completion gate originally queried the
-  accurate frontier, which re-enters the completion gate itself. A completion
-  criterion must be structural; the verifier calling it has already supplied the
-  accurate half. Recorded in [acceptance/root.test.mjs](acceptance/root.test.mjs).
-
-Both produced the same rule, now in the protocol: **run a gate red for the right
-reasons before publishing it.** A statement nobody can satisfy is a defect of the
-statement — and `project-init`'s own gate caught itself passing while its tool
-did not exist, because a crash message happened to match an assertion.
-
-## What humans still do
-
-Three jobs, and no others:
-
-1. **Audit top-level contracts for faithfulness** — is this statement really what
-   we want built? Prove2Me's blind read-back applies: have an agent restate the
-   contract without seeing the original intent, and compare.
-2. **Amend laws** — the deliberate, versioned encoding of taste.
-3. **Arbitrate trade-offs** between dimensions when gates cannot decide.
-
-Humans do not review implementations for correctness; the gate decides that. In
-the git-native v0.1 flow a human still presses merge unless you enable
-auto-merge on green — what is removed is reading the diff to decide whether it
-works.
-
 ## Provenance
 
 The protocol is a deliberate transplant of
 [Prove2Me](https://arxiv.org/abs/2608.28433) (Shuze Chen, Kunal Marwaha, Xiaoyang Lu, Henry Yuen, Tianyi Peng), the platform
 behind Anthropic's [Fermat's Last Theorem
 formalization](https://www.anthropic.com/research/formalizing-fermats-last-theorem).
+
 Kept verbatim: immutable statements, proof-sketch decomposition, lock-free
 optimistic concurrency (agents pick work freely, no locks or assignment),
 searchable failed attempts (in the FLT run, salvaged failures contributed ~7%
-of the final non-boilerplate lines), and a small human-audited core. Two
-scheduling choices are build2me's own, not the paper's: Prove2Me steers agents
-with curated milestones and a search API, where build2me ranks the frontier by
-a closability scalar; and the paper states no race-arbitration rule, where
-build2me says first accepted wins. Software forced two adaptations mathematics does not need:
+of the final non-boilerplate lines), and a small human-audited core.
+
+Two scheduling choices are build2me's own, not the paper's: Prove2Me steers
+agents with curated milestones and a search API, where build2me ranks the
+frontier by a closability scalar; and the paper states no race-arbitration
+rule, where build2me says first accepted wins.
+
+Software forced two adaptations mathematics does not need:
 
 | | Prove2Me (mathematics) | build2me (software) |
 |---|---|---|
