@@ -1,0 +1,9 @@
+{
+  "name": "contract-revision",
+  "title": "Revision: deprecate-and-supersede as one operation",
+  "interface": "CLI: node tools/revise.mjs <contract> --reason <text> (--set field=value)... | --file <draft.json> [--as <name>] [--dir <project>]. Publishes the successor contract (predecessor fields + changes, auto-named <base>-v2, -v3, ...), appends '<old> superseded-by:<new> <reason>' to laws/deprecations.log, and reports every reopened dependent. The frontier must list a contract all of whose submissions import deprecated contracts as actionable, naming each successor to re-point at; a contract with a deprecation-free path stays off. A refused revision leaves contracts/ and the log byte-identical.",
+  "acceptance": "node --test acceptance/contract-revision.test.mjs",
+  "nl_description": "How a contract evolves. It is never edited in place - it is deprecated and superseded in one command, and deprecation reopens everything downstream. The machine-readable successor pointer in the log is what turns that reopening into routed work: verify, graph and the frontier read it and send agents from the deprecated region to its replacement, so a statement can be revised again and again without ever rewriting history.",
+  "serves": "root",
+  "env": "node>=20"
+}

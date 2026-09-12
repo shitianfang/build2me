@@ -8,7 +8,7 @@ them, a verifier is the only judge, and finished parts compose by cascade.
 [Protocol](PROTOCOL.md) · [Stub semantics](STUBS.md) · [Rendered DAG](docs/DAG.md) · [Race 001](races/001-deprecation-cascade.md) · [中文](README.zh-CN.md)
 
 [![verify](https://github.com/shitianfang/build2me/actions/workflows/verify.yml/badge.svg)](https://github.com/shitianfang/build2me/actions/workflows/verify.yml)
-**13 / 13 contracts Done · frontier empty · built by a swarm under its own protocol**
+**14 / 14 contracts Done · frontier empty · built by a swarm under its own protocol**
 
 ```sh
 node tools/init.mjs ../my-system --root my-system   # scaffold your own project
@@ -75,6 +75,23 @@ done:
   "env": "node>=20"
 }
 ```
+
+**Contracts do change** — never by editing, only by revision: deprecate the
+old statement, publish its successor. One command does the whole move —
+
+```sh
+node tools/revise.mjs search-index --set interface="..." --reason "positions are now required"
+# -> publishes contracts/search-index-v2.json
+# -> appends "search-index superseded-by:search-index-v2 ..." to the log
+# -> deprecation reopens everything downstream, and the frontier lists each
+#    reopened contract with the successor to re-point at
+```
+
+— so a statement can be revised again and again (`-v2`, `-v3`, …) while
+history stays append-only and everything ever built stays auditable. That is
+the whole evolution model: statements are revised and re-split as
+understanding grows, dimension floors ratchet tighter as laws, and nothing is
+ever rewritten.
 
 **2. Submission** — an attempt at a contract, in `impl/<contract>/<id>/meta.json`.
 Either an `implementation`, or a `decomposition` that reduces the contract to
@@ -232,6 +249,7 @@ Every tool takes `--dir <project>` and defaults to the current directory.
 | `node tools/graph.mjs [--format json\|mermaid\|dot]` | DAG export with derived statuses; edges styled by verdict. `dot` needs graphviz to render, `mermaid` renders on GitHub. |
 | `node tools/stub.mjs <contract> [--format mjs\|dts] [--check]` | Materializes a contract's interface as a compilable stub, so a parent type-checks and loads before any child exists. `--check` keeps committed stubs honest in CI. |
 | `node tools/deprecate.mjs <contract> --reason <text>` | Retires a statement (append-only) and names every dependent the verifier will now hold Open. |
+| `node tools/revise.mjs <contract> --set field=value --reason <text>` | **How a contract evolves.** Publishes the successor (auto-named `-v2`, `-v3`, …) and deprecates the predecessor with a `superseded-by:` pointer, in one operation; the frontier then shows every reopened dependent with the successor to re-point at. |
 | `node tools/serve.mjs [--port n]` | HTTP coordination API: contracts, submissions, frontier, graph, and search across submissions **including failed ones**. Unauthenticated — see Security. |
 | `node tools/misalign.mjs [--since rev] [--json]` | Mines co-change history and reports file pairs the contract tree says are independent but history says are coupled. |
 | `node tools/drill.mjs list\|record\|report` | Cold-agent comprehension drills with budgets, append-only results, trends. |
@@ -318,9 +336,10 @@ better, in [bench/002-ranked-search/results.md](bench/002-ranked-search/results.
 ## This repository is self-hosting — and closed its own root
 
 build2me was built under its own protocol, by a swarm. The system is the `root`
-contract, decomposed into eleven children; **all twelve contracts are Done**
-(`node tools/verify.mjs` reports 12 done / 0 open), and the moment the last child
-closed, root's own integration gate ran by cascade and accepted.
+contract, decomposed into eleven children at first closure; the statement set
+has kept growing since and **every contract is Done** (`node tools/verify.mjs`
+reports 14 done / 0 open). The moment the last child closed, root's own
+integration gate ran by cascade and accepted.
 
 What that run actually cost, from the harness logs: **seven Opus agent sessions**
 — three racing one contract, one judging them blind, three closing frontier
@@ -385,7 +404,7 @@ build2me says first accepted wins. Software forced two adaptations mathematics d
 | | Prove2Me (mathematics) | build2me (software) |
 |---|---|---|
 | composition | free — Curry–Howard makes a proof over proved lemmas a proof | **not free** — a parent's acceptance is an integration gate that actually executes at cascade |
-| statements | never become false | **change** — contracts are deprecated, never edited, and deprecation re-opens dependents |
+| statements | never become false | **change** — contracts are revised (deprecate-and-supersede, `tools/revise.mjs`), never edited, and deprecation re-opens dependents |
 
 ## Status
 
@@ -398,8 +417,8 @@ those means deprecate-and-supersede, not an edit.
 
 `node tools/frontier.mjs` is the contribution guide. With the frontier empty,
 contributing means extending the statement set: publish a new contract together
-with its gate — run the gate red for the right reasons first — or
-deprecate-and-supersede one you can improve. Read [PROTOCOL.md](PROTOCOL.md); an
+with its gate — run the gate red for the right reasons first — or revise one
+you can improve (`node tools/revise.mjs`). Read [PROTOCOL.md](PROTOCOL.md); an
 agent that has read it can participate correctly.
 
 ## License

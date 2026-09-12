@@ -22,6 +22,7 @@ if (json) {
   console.log(JSON.stringify({
     dir,
     status: Object.fromEntries([...status.entries()].sort()),
+    successors: Object.fromEntries([...project.successors.entries()].sort()),
     verdicts: Object.fromEntries([...verdicts.entries()].sort()),
     errors: allErrors,
   }, null, 2));
@@ -29,7 +30,9 @@ if (json) {
   const names = [...status.keys()].sort();
   console.log(`build2me verify — ${dir}\n`);
   for (const name of names) {
-    console.log(`  ${name.padEnd(28)} ${status.get(name).toUpperCase()}`);
+    const succ = status.get(name) === 'deprecated' && project.successors.has(name)
+      ? ` -> superseded by ${project.successors.get(name)}` : '';
+    console.log(`  ${name.padEnd(28)} ${status.get(name).toUpperCase()}${succ}`);
     for (const s of project.submissions.filter((x) => x.contract === name)) {
       const v = verdicts.get(s.key) ?? 'PENDING';
       console.log(`    ${('' + s.id).padEnd(26)} ${s.kind} -> ${v}`);

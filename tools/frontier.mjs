@@ -33,15 +33,34 @@ const leaves = [...status.entries()]
   .map(([name]) => name)
   .filter((name) => {
     const subs = subsOf(name);
-    return subs.length === 0 || subs.some((s) => s.imports.every((i) => status.get(i) === 'done'));
+    if (subs.length === 0) return true;
+    if (subs.some((s) => s.imports.every((i) => status.get(i) === 'done'))) return true;
+    // Reopened by deprecation: when every submission imports at least one
+    // deprecated contract, no cascade will ever close this contract — waiting
+    // is pointless, so the repair (re-point at the successor) is actionable
+    // now. A contract with even one deprecation-free submission still has a
+    // live path and stays off the frontier; its open children are on it.
+    return subs.every((s) => s.imports.some((i) => status.get(i) === 'deprecated'));
   });
+
+// For a reopened contract, name each deprecated import and where it went.
+const repairsOf = (name) => {
+  const seen = new Map();
+  for (const s of subsOf(name)) {
+    for (const i of s.imports) {
+      if (status.get(i) === 'deprecated' && !seen.has(i)) seen.set(i, project.successors.get(i) ?? null);
+    }
+  }
+  return [...seen.entries()].map(([imp, succ]) => ({ import: imp, successor: succ }));
+};
 
 const doneSet = (res) => new Set([...res.status.entries()].filter(([, v]) => v === 'done').map(([k]) => k));
 const base = doneSet(computeStatus(project, { runAcceptance: false }));
 const rows = leaves.map((name) => {
   const hyp = doneSet(computeStatus(project, { runAcceptance: false, forceDone: new Set([name]) }));
   const closability = [...hyp].filter((n) => n !== name && !base.has(n)).length;
-  return { name, closability, title: project.contracts.get(name).title };
+  const repairs = repairsOf(name);
+  return { name, closability, title: project.contracts.get(name).title, ...(repairs.length > 0 ? { repairs } : {}) };
 }).sort((a, b) => b.closability - a.closability || a.name.localeCompare(b.name));
 
 if (json) {
@@ -52,6 +71,10 @@ if (json) {
     console.log('  (empty — every contract is Done or Deprecated)');
   } else {
     console.log(`  ${'closability'.padEnd(12)} contract`);
-    for (const r of rows) console.log(`  ${String(r.closability).padEnd(12)} ${r.name.padEnd(28)} ${r.title}`);
+    for (const r of rows) {
+      const hint = (r.repairs ?? [])
+        .map((x) => `re-point ${x.import} -> ${x.successor ?? '(no successor yet — publish one)'}`).join(', ');
+      console.log(`  ${String(r.closability).padEnd(12)} ${r.name.padEnd(28)} ${r.title}${hint ? `  [${hint}]` : ''}`);
+    }
   }
 }

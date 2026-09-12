@@ -1,0 +1,7 @@
+{
+  "contract": "contract-revision",
+  "kind": "implementation",
+  "imports": ["deprecation-cascade", "frontier-tool", "verifier"],
+  "files": ["tools/revise.mjs", "tools/lib.mjs", "tools/frontier.mjs", "tools/verify.mjs", "tools/graph.mjs", "tools/init.mjs"],
+  "notes": "revise.mjs composes the existing deprecation primitive rather than duplicating it: it validates and writes the successor contract file first (a new contract alone is harmless Open work), then delegates the log append to tools/deprecate.mjs so every guard and the read-back check apply unchanged; if the deprecation is refused the successor file is removed again. The successor pointer lives in the log line itself ('superseded-by:<new>' as the first reason token) - one source of truth, backward-compatible with the '<name> <reason>' format. lib.mjs parses it into project.successors; frontier.mjs gained the repair rule (a contract whose every submission imports something deprecated can never close by cascade, so it is actionable NOW and carries repairs[] naming the successors); verify/graph display the succession. Gate was run red against a no-op reference implementation before the real tool existed: 5 of 6 tests failed for the right reasons (missing successor file, missing pointer, missing frontier row, refusals absent); the 6th asserts an absence and is green on a no-op by construction."
+}

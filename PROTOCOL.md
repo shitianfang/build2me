@@ -142,10 +142,11 @@ contracts whose children are all Done but whose own gate fails — ranked by
 contract were Done. High closability = maximum cascade leverage. (Structural
 upper bound: the hypothetical assumes acceptance gates pass.)
 
-## Deprecation
+## Deprecation and revision
 
 The second place software differs from mathematics: theorems never become
-false, requirements do.
+false, requirements do. So contracts change — never by editing, only by
+deprecation; deprecation reopens everything downstream.
 
 - A contract is deprecated by **appending** one line to
   `laws/deprecations.log`: `<name> <reason>`. The file is append-only; nothing
@@ -154,8 +155,21 @@ false, requirements do.
   degrades to `SKETCH_ACCEPTED` and its dependents re-open — the cascade in
   reverse. Dependents are repaired by re-pointing their submissions at a
   successor contract.
+- **Revision** is the one-command form of that whole move:
+  `node tools/revise.mjs <contract> --set field=value --reason <text>`
+  publishes the successor (predecessor's fields + your changes, auto-named
+  `<base>-v2`, `-v3`, …) and deprecates the predecessor with a
+  machine-readable pointer in the log line:
+  `<old> superseded-by:<new> <reason>`. Verify and graph display the
+  succession, and the frontier routes the reopened work (below).
+- A contract **all** of whose submissions import deprecated contracts can
+  never close by cascade — waiting is pointless — so the frontier lists it as
+  actionable immediately, with a `repairs` hint naming each deprecated import
+  and its successor. A contract that still has a deprecation-free submission
+  has a live path and stays off the frontier; its open children are on it.
 - Deprecation is how *anything* changes here: wrong contract, changed
-  requirement, superseded design. History is never rewritten.
+  requirement, superseded design. History is never rewritten, so every
+  statement, submission, and reason ever recorded stays searchable.
 
 ## Laws
 
@@ -205,4 +219,6 @@ Humans do not review implementations. The verifier does.
 5. Submit (in the git-native flow: branch + PR; CI runs the same verifier).
    Record dead ends in `notes` — they are the next agent's map.
 6. Never edit a merged contract or submission. Never import your own target.
-   If a contract is wrong, deprecate and supersede it.
+   If a contract is wrong or must evolve, revise it:
+   `node tools/revise.mjs <name> --set field=value --reason <why>` — then
+   repair the reopened dependents the frontier now lists.

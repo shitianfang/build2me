@@ -3,12 +3,14 @@
 **用 prove2me 的协议造软件**：不可变契约 DAG、无锁乐观并发、每个节点一条机器可判的验收、级联验证、一个标量当调度器——没有任务板、没有认领、没有人工合并瓶颈。
 
 [![verify](https://github.com/shitianfang/build2me/actions/workflows/verify.yml/badge.svg)](https://github.com/shitianfang/build2me/actions/workflows/verify.yml)
-**13 / 13 契约 Done · 前沿清空 · 由一群 agent 在自己的协议下建成**
+**14 / 14 契约 Done · 前沿清空 · 由一群 agent 在自己的协议下建成**
 
 ```mermaid
 graph TD
   agent_server["agent-server"]:::done
+  contract_revision["contract-revision"]:::done
   dag_viz["dag-viz"]:::done
+  declared_laws["declared-laws"]:::done
   deprecation_cascade["deprecation-cascade"]:::done
   example_flow["example-flow"]:::done
   frontier_tool["frontier-tool"]:::done
@@ -19,6 +21,9 @@ graph TD
   slow_loop_instruments["slow-loop-instruments"]:::done
   typed_stub_semantics["typed-stub-semantics"]:::done
   verifier["verifier"]:::done
+  contract_revision --> deprecation_cascade
+  contract_revision --> frontier_tool
+  contract_revision --> verifier
   root --> agent_server
   root -.-> dag_viz
   root --> deprecation_cascade
@@ -36,7 +41,8 @@ graph TD
 ```
 
 <sub>由 `node tools/graph.mjs --structural --format mermaid` 逐字生成（与 [docs/DAG.md](docs/DAG.md) 同源，改动后需重新生成）。
-绿色 = 该契约的验收门通过；实线 = 关闭 root 的那份分解（`dec-001`）所 import 的子契约，
+绿色 = 该契约的验收门通过；实线 = 已被 ACCEPTED 的提交所 import 的契约（如关闭 root 的
+分解 `dec-001`，以及 `contract-revision` 的实现所依赖的三个内核契约），
 虚线 = 只出现在后续分解草案（`dec-002`/`dec-003`）里的子契约——它们本身也已 Done，
 只是关闭 root 的不是它们那份分解。</sub>
 
@@ -68,6 +74,7 @@ build2me 把该协议移植到工程领域，并为软件与数学不同的两�
 
 1. **组合不是免费的**——子契约各自通过不代表父级能工作，所以父契约的验收是级联时真实执行的集成门；
 2. **陈述会变**——需求漂移；契约从不修改，只废止（append-only），废止会级联重开下游。
+   现在整个演进动作是一条命令：`node tools/revise.mjs`（见下文工具表）。
 
 协议全文见 [PROTOCOL.md](PROTOCOL.md)（英文）：一个 agent 读完即可正确参与。
 
@@ -75,6 +82,10 @@ build2me 把该协议移植到工程领域，并为软件与数学不同的两�
 
 - **契约（contract）**——`contracts/<name>.json`，一条不可变的"什么必须为真"，对"怎么做"保持沉默。
   `acceptance` 字段是一条 shell 命令，**它就是 Done 的全部定义**；契约本身不带状态字段。
+  **契约会变——但从不修改，只废止；废止会重开下游。** `node tools/revise.mjs` 一条命令完成
+  整个演进动作：发布后继契约（自动编号 `-v2`、`-v3`……）、废止前身并在日志里留下机器可读的
+  `superseded-by:` 指针；frontier 随即把被重开的下游列出来，并直接标出该改指向的后继。
+  陈述就这样一轮一轮修订、重拆、逐维度持续优化，而历史 append-only、从不重写。
 - **提交（submission）**——`impl/<契约>/<id>/meta.json`，一次尝试。要么是 `implementation`，
   要么是把契约归约到子契约的 `decomposition`，其 `imports` 就是 DAG 的边。
 - **法律（law）**——`laws/laws.md`，项目的公理系统。**只有被验证器或 CI 强制执行的才算法律，
@@ -135,6 +146,7 @@ node tools/frontier.mjs --dir acceptance/fixtures/demo
 | `node tools/graph.mjs [--format json\|mermaid\|dot]` | 导出 DAG，节点带状态、边带判决。`mermaid` 可直接在 GitHub 渲染。 |
 | `node tools/stub.mjs <contract> [--format mjs\|dts] [--check]` | 把契约的 interface 物化成可编译的桩，让父级在子契约存在之前就能加载/类型检查（需要在 interface 里写一个 stub 围栏块，见 [STUBS.md](STUBS.md)）。 |
 | `node tools/deprecate.mjs <contract> --reason <text>` | 废止一条陈述（append-only），并列出验证器随之要重新持为 Open 的所有下游。 |
+| `node tools/revise.mjs <contract> --set 字段=值 --reason <text>` | **契约演进的方式。** 一步完成"发布后继 + 废止前身"，日志带 `superseded-by:` 指针；frontier 随即列出每个被重开的下游和该改指向的后继。 |
 | `node tools/serve.mjs [--port n]` | HTTP 协调 API：契约、提交、前沿、图、以及**包含失败提交在内**的搜索。无鉴权——见安全须知。 |
 | `node tools/misalign.mjs [--since rev] [--json]` | 挖 git 共变历史，报出"契约树说无关、历史说耦合"的文件对。 |
 | `node tools/drill.mjs list\|record\|report` | 冷启动 agent 理解力演练：带预算的题目、append-only 结果、趋势。 |
@@ -192,7 +204,7 @@ drills/       冷启动演练的题目与 append-only 结果
 
 ## 本仓库自举——并关闭了自己的根契约
 
-build2me 用它自己的协议、由一群并行 agent 开发完成：系统即 `root` 契约，分解为十一个子契约，**全部十二份契约均已 Done**（`node tools/verify.mjs` 报告 12 done / 0 open）；最后一个子契约关闭的瞬间，root 的集成门经级联真实运行并通过。
+build2me 用它自己的协议、由一群并行 agent 开发完成：系统即 `root` 契约，首次关闭时分解为十一个子契约；此后陈述集持续生长，**当前全部契约均已 Done**（`node tools/verify.mjs` 报告 14 done / 0 open）。最后一个子契约关闭的瞬间，root 的集成门经级联真实运行并通过。
 
 这一轮的真实开销（取自 harness 日志）：**七个 Opus agent 会话**——三个竞速同一契约、一个盲评、三个并行关闭前沿契约——合计约 **62 分钟 agent 墙钟**（并发运行，实际耗时远少于此）与 **约 68.3 万 subagent token**，另加发布契约、审计门、合并的队长会话。
 

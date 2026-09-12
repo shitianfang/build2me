@@ -15,7 +15,7 @@ export function loadProject(dir) {
   const cdir = path.join(dir, 'contracts');
   if (!fs.existsSync(cdir)) {
     errors.push(`no contracts/ directory in ${dir}`);
-    return { dir, contracts, submissions: [], laws: [], deprecated: new Set(), errors };
+    return { dir, contracts, submissions: [], laws: [], deprecated: new Set(), successors: new Map(), errors };
   }
   for (const file of fs.readdirSync(cdir).filter((f) => f.endsWith('.json')).sort()) {
     let c;
@@ -92,17 +92,24 @@ export function loadProject(dir) {
     }
   }
 
+  // A log line is `<name> <reason...>`; a `superseded-by:<successor>` token in
+  // the reason is the machine-readable pointer revision leaves behind, so the
+  // reopened downstream can be routed to the replacement (see tools/revise.mjs).
   const deprecated = new Set();
+  const successors = new Map();
   const dfile = path.join(dir, 'laws', 'deprecations.log');
   if (fs.existsSync(dfile)) {
     for (const line of fs.readFileSync(dfile, 'utf8').split('\n')) {
       const t = line.trim();
       if (t === '' || t.startsWith('#')) continue;
-      deprecated.add(t.split(/\s+/)[0]);
+      const [name, ...rest] = t.split(/\s+/);
+      deprecated.add(name);
+      const pointer = rest.find((w) => w.startsWith('superseded-by:'))?.slice('superseded-by:'.length);
+      if (pointer && !successors.has(name)) successors.set(name, pointer);
     }
   }
 
-  return { dir, contracts, submissions, laws, deprecated, errors };
+  return { dir, contracts, submissions, laws, deprecated, successors, errors };
 }
 
 function findCycle(project) {

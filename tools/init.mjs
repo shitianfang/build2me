@@ -66,7 +66,7 @@ if (fs.existsSync(target)) {
   }
 }
 
-const KERNEL = ['lib.mjs', 'verify.mjs', 'frontier.mjs', 'graph.mjs', 'deprecate.mjs', 'stub.mjs', 'check-immutability.sh'];
+const KERNEL = ['lib.mjs', 'verify.mjs', 'frontier.mjs', 'graph.mjs', 'deprecate.mjs', 'revise.mjs', 'stub.mjs', 'check-immutability.sh'];
 const written = [];
 const write = (rel, content) => {
   const file = path.join(target, rel);
@@ -135,9 +135,11 @@ written. Laws are amended by humans, deliberately; git is their version history.
 A law is only a law if something enforces it. Prose without a check is advice.
 
 - **L1 — contracts are immutable.** Contract files may only be added, never
-  modified or deleted. Enforced by \`tools/check-immutability.sh\`. To change a
-  contract: deprecate it (\`node tools/deprecate.mjs <name> --reason ...\`) and
-  publish a successor under a new name.
+  modified or deleted. Enforced by \`tools/check-immutability.sh\`. Contracts
+  still change — by revision, never by editing:
+  \`node tools/revise.mjs <name> --set field=value --reason ...\` publishes the
+  successor, deprecates the predecessor, and the frontier lists every reopened
+  dependent with the successor to re-point at.
 - **L2 — deprecations.log is append-only.** Enforced by the same script.
 
 Add your own as you build — not before. You cannot know up front which

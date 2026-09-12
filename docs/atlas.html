@@ -150,7 +150,7 @@
 
 <script>
 const DATA = {
-  snapshot: '2026-09-11 · commit series c8c9→root-closure',
+  snapshot: '2026-09-12 · 14 contracts, root closed by cascade',
   ci: 'green (25s)',
   nodes: [
     { name: 'root', serves: null, status: 'done' },
@@ -161,9 +161,12 @@ const DATA = {
     { name: 'example-flow', serves: 'root', status: 'done' },
     { name: 'dag-viz', serves: 'root', status: 'done' },
     { name: 'deprecation-cascade', serves: 'root', status: 'done' },
+    { name: 'contract-revision', serves: 'root', status: 'done' },
     { name: 'typed-stub-semantics', serves: 'root', status: 'done' },
     { name: 'agent-server', serves: 'root', status: 'done' },
-    { name: 'slow-loop-instruments', serves: 'root', status: 'done' }
+    { name: 'slow-loop-instruments', serves: 'root', status: 'done' },
+    { name: 'project-init', serves: 'root', status: 'done' },
+    { name: 'declared-laws', serves: 'root', status: 'done' }
   ],
   edges: [
     { from: 'root', to: 'protocol-spec', verdict: 'ACCEPTED' },
@@ -175,7 +178,11 @@ const DATA = {
     { from: 'root', to: 'deprecation-cascade', verdict: 'ACCEPTED' },
     { from: 'root', to: 'agent-server', verdict: 'ACCEPTED' },
     { from: 'root', to: 'slow-loop-instruments', verdict: 'ACCEPTED' },
-    { from: 'root', to: 'dag-viz', verdict: 'SKETCH_ACCEPTED' }
+    { from: 'root', to: 'dag-viz', verdict: 'SKETCH_ACCEPTED' },
+    { from: 'root', to: 'project-init', verdict: 'SKETCH_ACCEPTED' },
+    { from: 'contract-revision', to: 'deprecation-cascade', verdict: 'ACCEPTED' },
+    { from: 'contract-revision', to: 'frontier-tool', verdict: 'ACCEPTED' },
+    { from: 'contract-revision', to: 'verifier', verdict: 'ACCEPTED' }
   ],
   race: {
     solutions: [
