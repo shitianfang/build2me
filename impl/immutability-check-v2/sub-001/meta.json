@@ -1,0 +1,7 @@
+{
+  "contract": "immutability-check-v2",
+  "kind": "implementation",
+  "imports": [],
+  "files": ["tools/check-immutability.sh", "acceptance/immutability-check-v2.test.mjs"],
+  "notes": "First live revision in this repository (via tools/revise.mjs). The script now diff-checks modified contract files field by field: descriptive fields (title, nl_description, serves) pass, anything else - semantic core, unknown fields, broken JSON - is a violation whose message names the field and the revise command. Deletes/renames and log rewrites stay forbidden. Gate was run red against the v1 script first: the two new-semantics tests failed for the right reasons while every inherited v1 behavior stayed green. The v1 gate file remains in acceptance/ as history; the verifier never runs it because the v1 contract is deprecated."
+}

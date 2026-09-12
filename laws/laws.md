@@ -9,9 +9,14 @@ Built into the kernel and CI:
 
 - **L1 — zero runtime dependencies.** `tools/` runs on plain Node >= 20.
   Enforced by the verifier (a `package.json` with dependencies fails).
-- **L2 — contracts are immutable.** Add-only; enforced by
-  `tools/check-immutability.sh` in CI. To change one: deprecate and publish a
-  successor.
+- **L2 — contract semantics are immutable.** The semantic core (name,
+  interface, acceptance, env) of a merged contract never changes, and contract
+  files are never deleted or renamed; descriptive fields (title,
+  nl_description, serves) may be edited in place. Enforced by
+  `tools/check-immutability.sh` in CI. To change the core: one revision
+  command, `node tools/revise.mjs` (amended from full-file immutability when
+  immutability-check was revised to -v2 — a typo fix must not cost a
+  revision).
 - **L3 — deprecations.log is append-only.** Same script.
 
 Declared as objects (`laws/<id>.json`, run by the verifier on every pass):

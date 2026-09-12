@@ -5,7 +5,7 @@
 [协议全文](PROTOCOL.md)（英文） · [桩语义](STUBS.md) · [DAG 图](docs/DAG.md) · [Race 001](races/001-deprecation-cascade.md) · [English](README.md)
 
 [![verify](https://github.com/shitianfang/build2me/actions/workflows/verify.yml/badge.svg)](https://github.com/shitianfang/build2me/actions/workflows/verify.yml)
-**14 / 14 契约 Done · 前沿清空 · 由一群 agent 在它自己的协议下建成**
+**14 / 16 契约 Done · 前沿清空 · 两条陈述已在线修订 · 由一群 agent 在它自己的协议下建成**
 
 ```sh
 node tools/init.mjs ../my-system --root my-system   # 用它开始你自己的项目
@@ -28,7 +28,7 @@ build2me 问的是：**软件里，什么东西能当那个"编译器"？**
 
 ## 三个对象（整套东西就这三样）
 
-### 1. 契约 contract —— 不可变的「什么必须为真」
+### 1. 契约 contract —— 一条「什么必须为真」的陈述，随理解一起演进
 
 一份 JSON 文件，只说**要什么**，对**怎么做**保持沉默。最关键的是 `acceptance` 那一行：
 
@@ -46,17 +46,15 @@ build2me 问的是：**软件里，什么东西能当那个"编译器"？**
 
 **`acceptance` 这一行，就是「做完了」的全部定义。** 没有"差不多可以了"，没有"我再问问"——命令退出码是 0 就是 Done，非 0 就是没做完。
 
-契约**永远不能改**（CI 里的 `check-immutability.sh` 强制只增不改）。但契约**会变——从不修改，只废止；废止会重开下游**。整个演进动作是一条命令：
+**契约会变——随时改。** 标题、描述这类说明性字段，直接改文件就行。要改契约的**语义**——interface、acceptance、env——一条命令：
 
 ```sh
 node tools/revise.mjs search-index --set interface="..." --reason "位置索引成为必需"
-# -> 发布 contracts/search-index-v2.json（前身字段 + 你的改动，自动编号 -v2、-v3……）
-# -> 往日志追加 "search-index superseded-by:search-index-v2 ..."
-# -> 废止把下游全部打回 Open，frontier 随即列出每个被重开的契约，
-#    并直接标出该改指向的后继
+# -> contracts/search-index-v2.json 从此就是现行陈述
+# -> 下游自动全部重开，frontier 直接列出每个被重开的契约和该改指向的新版
 ```
 
-于是一条陈述可以一轮一轮修订、重拆、逐维度持续优化，而历史只增不改、一行不丢，基于旧契约建过的东西永远可审计。
+理解每深一层就修订一版（`-v2`、`-v3`……）；整个方向不要了，就废止（deprecate）并写明原因，那片区域作为探索过的死路留在地图上。底层实现上，每个版本是一份独立的、永久保留的文件——就像 git：你随便改代码，但每个 commit 永远不变。这个实现细节在 swarm 规模下换来三件事：正在开工的 agent 脚下的陈述不会被人悄悄换掉；人只需要审计新陈述，永远不用重读旧陈述防夹带；所有验证过的结论，永远可以对着它当时验证的那份原文复验。
 
 ### 2. 提交 submission —— 对某条契约的一次尝试
 
@@ -148,38 +146,54 @@ graph TD
   deprecation_cascade["deprecation-cascade"]:::done
   example_flow["example-flow"]:::done
   frontier_tool["frontier-tool"]:::done
-  immutability_check["immutability-check"]:::done
+  immutability_check["immutability-check"]:::deprecated
+  immutability_check_v2["immutability-check-v2"]:::done
   project_init["project-init"]:::done
   protocol_spec["protocol-spec"]:::done
-  root["root"]:::done
+  root["root"]:::deprecated
+  root_v2["root-v2"]:::done
   slow_loop_instruments["slow-loop-instruments"]:::done
   typed_stub_semantics["typed-stub-semantics"]:::done
   verifier["verifier"]:::done
   contract_revision --> deprecation_cascade
   contract_revision --> frontier_tool
   contract_revision --> verifier
-  root --> agent_server
+  root -.-> agent_server
   root -.-> dag_viz
-  root --> deprecation_cascade
-  root --> example_flow
-  root --> frontier_tool
-  root --> immutability_check
+  root -.-> deprecation_cascade
+  root -.-> example_flow
+  root -.-> frontier_tool
+  root -.-> immutability_check
   root -.-> project_init
-  root --> protocol_spec
-  root --> slow_loop_instruments
-  root --> typed_stub_semantics
-  root --> verifier
+  root -.-> protocol_spec
+  root -.-> slow_loop_instruments
+  root -.-> typed_stub_semantics
+  root -.-> verifier
+  root_v2 --> agent_server
+  root_v2 --> contract_revision
+  root_v2 --> dag_viz
+  root_v2 --> declared_laws
+  root_v2 --> deprecation_cascade
+  root_v2 --> example_flow
+  root_v2 --> frontier_tool
+  root_v2 --> immutability_check_v2
+  root_v2 --> project_init
+  root_v2 --> protocol_spec
+  root_v2 --> slow_loop_instruments
+  root_v2 --> typed_stub_semantics
+  root_v2 --> verifier
+  immutability_check -. "superseded by" .-> immutability_check_v2
+  root -. "superseded by" .-> root_v2
   classDef done fill:#bbf7d0,stroke:#15803d,color:#14532d
   classDef open fill:#fde68a,stroke:#b45309,color:#78350f
   classDef deprecated fill:#e5e7eb,stroke:#6b7280,color:#374151
 ```
 
 <sub>由 `node tools/graph.mjs --structural --format mermaid` 逐字生成（与 [docs/DAG.md](docs/DAG.md) 同源，改动后需重新生成）。
-绿色 = 该契约的验收门已通过；实线 = 关闭 root 的那份分解（`dec-001`）所 import 的子契约；
-虚线 = 只出现在后续分解草案（`dec-002`/`dec-003`）里的子契约——它们本身也已 Done，
-只是关闭 root 的不是它们那份分解。`declared-laws` 没有连线：它声明 `serves: root`，
-但 root 的三份分解都没有 import 它。`contract-revision` 的三条实线，是它的实现
-所依赖（import）的三个内核契约。</sub>
+绿色 = 验收门已通过；灰色 = 被修订取代的旧版陈述，各自带一条 `superseded by`
+虚线指向自己的新版。实线 = 已被 ACCEPTED 的提交所 import 的契约（`root-v2` 的分解、
+`contract-revision` 的实现）；旧 `root` 的边全部变虚——修订让它的分解退回草案，
+这正是"废止重开下游"在图上的样子。</sub>
 
 ## 快速开始
 
@@ -234,7 +248,7 @@ $ node tools/frontier.mjs --dir acceptance/fixtures/demo
 | `node tools/serve.mjs [--port n]` | HTTP 协调 API：契约、提交、前沿、图，以及**包含失败提交在内**的搜索。无鉴权——见下面的安全须知。 |
 | `node tools/misalign.mjs [--since rev] [--json]` | 挖 git 共变历史，报出"契约树说无关、历史说耦合"的文件对。 |
 | `node tools/drill.mjs list\|record\|report` | 冷启动 agent 的理解力演练：带预算的题目、只增不改的结果、趋势。 |
-| `bash tools/check-immutability.sh <baseline>` | 强制契约与废止日志只增不改。每次 push 和 PR 都在 CI 里跑。 |
+| `bash tools/check-immutability.sh <baseline>` | 守住每条契约的语义核心（name、interface、acceptance、env）；说明性字段可以直接改。废止日志只增不改。每次 push 和 PR 都在 CI 里跑。 |
 
 ## 目录结构
 
@@ -250,7 +264,9 @@ drills/       冷启动演练的题目与只增不改的结果
 
 ## 本仓库自举——并且关闭了自己的根契约
 
-build2me 是用它自己的协议、由一群并行 agent 建成的：系统本身就是 `root` 契约，向下分解；**14 份契约全部 Done**（`node tools/verify.mjs` 报告 14 done / 0 open）。最后一个子契约关闭的那一刻，root 自己的集成门经级联真实跑了一次，并且通过。
+build2me 是用它自己的协议、由一群并行 agent 建成的：系统本身就是 `root` 契约，向下分解。最后一个子契约关闭的那一刻，root 自己的集成门经级联真实跑了一次，并且通过。
+
+修订机制随后**在这个仓库自己身上真实用过两次**——徽章上的 14 / 16 就是这么来的：`immutability-check` 修订为 `-v2`（说明性字段从此可以直接改——修个错别字不该付一次修订的代价），`root` 修订为 `-v2`（v1 的完成门要求**所有节点都 Done**，而任何做过修订的仓库都永远满足不了这个判据——第一次修订就会让 main 永久变红）。两个旧版陈述作为 deprecated 节点留在 DAG 上，带着 `superseded by` 边；第二次修订进行中时，frontier 亲自展示了修复提示（`root  [re-point immutability-check -> immutability-check-v2]`）。现在 `node tools/verify.mjs` 报告 **14 done / 0 open / 2 deprecated**，前沿为空。
 
 这一轮的真实开销（取自 harness 日志）：**七个 Opus agent 会话**——三个竞速同一条契约、一个盲评、三个并行关闭前沿契约——合计约 **62 分钟 agent 墙钟时间**（因为并发，实际耗时远少于此）和 **约 68.3 万 subagent token**，另加一个负责发布契约、审计门、合并的"队长"会话。
 
@@ -333,13 +349,13 @@ root 的完成门最初去查询"精确的前沿"，而那个查询又会重新�
 | | Prove2Me（数学） | build2me（软件） |
 |---|---|---|
 | 组合 | **免费**——Curry–Howard 保证"基于已证引理的证明"仍是证明 | **不免费**——父级的验收是一道在级联时真实执行的集成门 |
-| 陈述 | 永远不会变假 | **会变**——契约从不修改，只废止；废止会重开下游（一条命令：`tools/revise.mjs`） |
+| 陈述 | 永远不会变假 | **会演进**——`tools/revise.mjs` 一条命令发布新版，下游自动重开并被指向新版 |
 
 ## 当前状态
 
 v0.1，已完成、已自验证。git 原生：分支承载尝试，CI 即内核。
 
-**明确延后、并已如实声明**的部分：`tools/serve.mjs` 的异步验证队列与判决轮询、账户与鉴权、每账户在途上限、多项目路由。收紧其中任何一条，都必须走"废止 + 发布后继契约"，不能改契约。
+**明确延后、并已如实声明**的部分：`tools/serve.mjs` 的异步验证队列与判决轮询、账户与鉴权、每账户在途上限、多项目路由。收紧其中任何一条，都是一次修订（`tools/revise.mjs`），不是一次悄悄的编辑。
 
 ## 怎么参与
 

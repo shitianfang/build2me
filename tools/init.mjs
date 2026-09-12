@@ -134,12 +134,14 @@ written. Laws are amended by humans, deliberately; git is their version history.
 
 A law is only a law if something enforces it. Prose without a check is advice.
 
-- **L1 — contracts are immutable.** Contract files may only be added, never
-  modified or deleted. Enforced by \`tools/check-immutability.sh\`. Contracts
-  still change — by revision, never by editing:
+- **L1 — contract semantics are immutable.** The semantic core (name,
+  interface, acceptance, env) of a merged contract never changes, and contract
+  files are never deleted; descriptive fields (title, nl_description, serves)
+  may be edited in place. Enforced by \`tools/check-immutability.sh\`. To
+  change the core, revise:
   \`node tools/revise.mjs <name> --set field=value --reason ...\` publishes the
-  successor, deprecates the predecessor, and the frontier lists every reopened
-  dependent with the successor to re-point at.
+  next version, deprecates this one, and the frontier lists every reopened
+  dependent with the new version to re-point at.
 - **L2 — deprecations.log is append-only.** Enforced by the same script.
 
 Add your own as you build — not before. You cannot know up front which

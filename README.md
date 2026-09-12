@@ -3,15 +3,16 @@
 **Map the solution space before you build the software — so a swarm of agents can
 work in parallel without coordinating, and without a human reviewing code.**
 
-Work is split into immutable contracts, each carrying the command that decides
-whether it is satisfied. Agents pick contracts off a ranked frontier without
-claiming them, a verifier is the only judge, and finished parts compose by
-cascade.
+Work is split into contracts, each carrying the command that decides whether
+it is satisfied. Agents pick contracts off a ranked frontier without claiming
+them, a verifier is the only judge, finished parts compose by cascade — and
+contracts keep evolving as understanding grows, version by version, with the
+reopened downstream routed automatically.
 
 [Protocol](PROTOCOL.md) · [Stub semantics](STUBS.md) · [Rendered DAG](docs/DAG.md) · [Race 001](races/001-deprecation-cascade.md) · [中文](README.zh-CN.md)
 
 [![verify](https://github.com/shitianfang/build2me/actions/workflows/verify.yml/badge.svg)](https://github.com/shitianfang/build2me/actions/workflows/verify.yml)
-**14 / 14 contracts Done · frontier empty · built by a swarm under its own protocol**
+**14 / 16 contracts Done · frontier empty · 2 statements revised live · built by a swarm under its own protocol**
 
 ```sh
 node tools/init.mjs ../my-system --root my-system   # scaffold your own project
@@ -46,9 +47,8 @@ command.**
 
 ## Three objects
 
-**1. Contract** — an immutable statement of *what must be true*, silent about
-*how*. One JSON file, and the `acceptance` command is the whole definition of
-done:
+**1. Contract** — a statement of *what must be true*, silent about *how*. One
+JSON file, and the `acceptance` command is the whole definition of done:
 
 ```json
 {
@@ -66,22 +66,25 @@ That one line settles it. There is no "close enough" and no "let me check with
 someone" — the command exits 0 and the contract is Done, or it does not and the
 contract is not.
 
-Contracts are **never edited**; `check-immutability.sh` enforces append-only in
-CI. But contracts do change — never by editing, only by deprecation, and
-deprecation re-opens everything downstream. One command does the whole move:
+**And contracts evolve — freely, at any time.** A title or description you
+just edit in place. Changing what a contract *means* — interface, acceptance,
+env — is one command:
 
 ```sh
 node tools/revise.mjs search-index --set interface="..." --reason "positions are now required"
-# -> publishes contracts/search-index-v2.json
-# -> appends "search-index superseded-by:search-index-v2 ..." to the log
-# -> the deprecation reopens everything downstream, and the frontier lists
-#    each reopened contract with the successor to re-point at
+# -> contracts/search-index-v2.json is the live statement from here on
+# -> everything downstream reopens automatically, and the frontier lists
+#    each reopened contract with the new version to re-point at
 ```
 
-So a statement can be revised again and again (`-v2`, `-v3`, …) while history
-stays append-only and everything ever built stays auditable. That is the whole
-evolution model: statements are revised and re-split as understanding grows,
-dimension floors ratchet tighter as laws, and nothing is ever rewritten.
+Revise as often as understanding grows (`-v2`, `-v3`, …); abandon a whole
+direction with a deprecation and the region stays on the map as explored
+territory. Under the hood every version is its own permanent file — like git,
+where you edit freely yet every commit is immutable. That implementation
+detail is what buys three things at swarm scale: an agent mid-build never has
+the statement swapped under it, humans audit only new statements (never
+re-read old ones for sneaked edits), and everything ever verified stays
+verifiable against exactly what it was verified for.
 
 **2. Submission** — an attempt at a contract, in `impl/<contract>/<id>/meta.json`.
 Either an `implementation`, or a `decomposition` that reduces the contract to
@@ -289,7 +292,7 @@ Every tool takes `--dir <project>` and defaults to the current directory.
 | `node tools/serve.mjs [--port n]` | HTTP coordination API: contracts, submissions, frontier, graph, and search across submissions **including failed ones**. Unauthenticated — see Security. |
 | `node tools/misalign.mjs [--since rev] [--json]` | Mines co-change history and reports file pairs the contract tree says are independent but history says are coupled. |
 | `node tools/drill.mjs list\|record\|report` | Cold-agent comprehension drills with budgets, append-only results, trends. |
-| `bash tools/check-immutability.sh <baseline>` | Enforces append-only contracts and deprecation log. Runs in CI on every push and PR. |
+| `bash tools/check-immutability.sh <baseline>` | Guards the semantic core (name, interface, acceptance, env) of every contract; descriptive fields may be edited in place. Deprecation log append-only. Runs in CI on every push and PR. |
 
 ## Project layout
 
@@ -310,8 +313,18 @@ contract, decomposed into eleven children; the moment the last one closed,
 root's own integration gate ran by cascade and accepted. `declared-laws` — the
 third object, made machine-checked — was published afterwards and closed the
 same way, then `contract-revision` — evolution made a one-command operation.
-Today **all fourteen contracts are Done** (`node tools/verify.mjs` reports
-14 done / 0 open) and the frontier is empty.
+
+The revision machinery has since been used **on this repository itself,
+twice**, which is why the badge reads 14 / 16: `immutability-check` was
+revised to `-v2` when descriptive fields became editable in place (a typo fix
+must not cost a revision), and `root` was revised to `-v2` because the v1
+completion gate demanded *every node Done* — a criterion no repository with a
+revised contract could ever satisfy again. Both predecessors sit in the DAG as
+deprecated nodes with `superseded by` edges; during the second revision the
+frontier itself displayed the repair
+(`root  [re-point immutability-check -> immutability-check-v2]`). Today
+`node tools/verify.mjs` reports **14 done / 0 open / 2 deprecated** and the
+frontier is empty.
 
 What the root-closing run actually cost, from the harness logs: **seven Opus
 agent sessions** — three racing one contract, one judging them blind, three
@@ -427,10 +440,11 @@ means:
   contract are ready, directory order — not causality — decides which shows
   ACCEPTED; a submission listing files it did not write can take the credit.
   Binding verdicts to a submission's declared artifacts is open work.
-- **Gates are mutable where contracts are not.** CI protects `contracts/` and
-  the deprecation log; nothing yet protects `acceptance/`. A later commit can
-  weaken a gate without tripping any check — the planned fix is a CI rule that
-  a contract's gate must predate that contract's first submission.
+- **Gates are mutable where contract semantics are not.** CI protects the
+  semantic core in `contracts/` and the deprecation log; nothing yet protects
+  `acceptance/`. A later commit can weaken a gate without tripping any check —
+  the planned fix is a CI rule that a contract's gate must predate that
+  contract's first submission.
 - **A Done root cannot coexist with an open backlog.** The root gate asserts
   an empty frontier, so publishing any new open contract re-opens root and
   turns main red until the newcomer closes. That is prove2me's mission
@@ -463,14 +477,14 @@ Software forced two adaptations mathematics does not need:
 | | Prove2Me (mathematics) | build2me (software) |
 |---|---|---|
 | composition | free — Curry–Howard makes a proof over proved lemmas a proof | **not free** — a parent's acceptance is an integration gate that actually executes at cascade |
-| statements | never become false | **change** — contracts are revised (deprecate-and-supersede, `tools/revise.mjs`), never edited, and deprecation re-opens dependents |
+| statements | never become false | **evolve** — one `tools/revise.mjs` command publishes the next version and automatically reopens and routes everything downstream |
 
 ## Status
 
 v0.1, complete and self-verified. Git-native: branches carry attempts, CI is the
 kernel. Deferred and stated as such — the server's async verify queue and
 per-account caps, accounts and auth, multi-project routing. Tightening any of
-those means deprecate-and-supersede, not an edit.
+those means a revision (`tools/revise.mjs`), not a silent edit.
 
 ## Contributing
 

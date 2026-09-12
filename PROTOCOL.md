@@ -45,10 +45,15 @@ true*, silent about *how*. One file, `contracts/<name>.json`:
 
 Rules:
 
-- **Contracts are immutable.** Once merged, a contract file is never edited or
-  deleted (enforced by `tools/check-immutability.sh`). To change one, deprecate
-  it and publish a successor under a new name. Immutability is what lets
-  partial work compose: anything ever built against a contract stays valid.
+- **Contracts evolve; verdicts stay meaningful.** Descriptive fields
+  (`title`, `nl_description`, `serves`) may be edited in place — nothing
+  builds against them. The semantic core (`name`, `interface`, `acceptance`,
+  `env`) is immutable once merged (enforced by
+  `tools/check-immutability.sh`): it changes by publishing the next version
+  and deprecating this one — one command, `tools/revise.mjs` (see
+  *Deprecation and revision*). Immutable semantics are what let partial work
+  compose: anything ever built against a version stays valid against that
+  version, and auditing new statements is enough — old ones cannot shift.
 - A contract carries **no status field**. Status is derived at read time by the
   verifier.
 - Interface (statement) and implementation live in **separate files**, so
@@ -145,8 +150,10 @@ upper bound: the hypothetical assumes acceptance gates pass.)
 ## Deprecation and revision
 
 The second place software differs from mathematics: theorems never become
-false, requirements do. So contracts change — never by editing, only by
-deprecation; deprecation reopens everything downstream.
+false, requirements do. So contracts evolve constantly: a change to the
+semantic core lands as a new version of the statement, the predecessor is
+deprecated, and the deprecation reopens everything downstream — where the
+frontier routes it to the new version.
 
 - A contract is deprecated by **appending** one line to
   `laws/deprecations.log`: `<name> <reason>`. The file is append-only; nothing
@@ -218,7 +225,8 @@ Humans do not review implementations. The verifier does.
 4. Run `node tools/verify.mjs` locally until green.
 5. Submit (in the git-native flow: branch + PR; CI runs the same verifier).
    Record dead ends in `notes` — they are the next agent's map.
-6. Never edit a merged contract or submission. Never import your own target.
-   If a contract is wrong or must evolve, revise it:
+6. Never edit a merged contract's semantic core or a merged submission; a
+   title or description you may fix in place. Never import your own target.
+   When a contract is wrong or must evolve, revise it:
    `node tools/revise.mjs <name> --set field=value --reason <why>` — then
    repair the reopened dependents the frontier now lists.

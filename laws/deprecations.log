@@ -1,1 +1,3 @@
 # append-only — one line per deprecated contract: <contract-name> <reason>
+immutability-check superseded-by:immutability-check-v2 descriptive fields carry no verdicts and nothing builds against them; locking them punished typo fixes with a full revision
+root superseded-by:root-v2 completion must tolerate revised history: the v1 gate demanded every node Done, so any deprecated predecessor made the system permanently incompletable

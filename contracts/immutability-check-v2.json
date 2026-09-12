@@ -1,0 +1,9 @@
+{
+  "name": "immutability-check-v2",
+  "title": "Contract immutability enforcement",
+  "interface": "CLI: bash tools/check-immutability.sh [<baseline-ref>]. Fails if a contract file was deleted or renamed, if a modified contract changed anything beyond its descriptive fields (title, nl_description, serves), or if laws/deprecations.log shrank or was rewritten. The semantic core (name, interface, acceptance, env) changes only by revision. Exits 0 silently when the baseline ref does not exist.",
+  "acceptance": "node --test acceptance/immutability-check-v2.test.mjs",
+  "nl_description": "The git-native form of prove2me's statement immutability, scoped to what actually carries trust: the semantic core is locked so partial work composes and audits stay valid, while descriptive metadata may be edited freely - a typo fix must not cost a revision.",
+  "serves": "root",
+  "env": "git, bash"
+}

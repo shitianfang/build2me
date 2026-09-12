@@ -1,0 +1,7 @@
+{
+  "contract": "root-v2",
+  "kind": "decomposition",
+  "imports": ["protocol-spec", "verifier", "frontier-tool", "immutability-check-v2", "example-flow", "typed-stub-semantics", "deprecation-cascade", "contract-revision", "agent-server", "slow-loop-instruments", "dag-viz", "project-init", "declared-laws"],
+  "files": ["PROTOCOL.md"],
+  "notes": "The system reduced to its current live parts - root/dec-001 re-pointed after the immutability-check revision, and widened to import the three contracts (dag-viz, project-init, declared-laws) that closed after v1's winning decomposition was recorded. SKETCH_ACCEPTED until every child is Done; root-v2 then auto-resolves via its own structural completion gate."
+}
